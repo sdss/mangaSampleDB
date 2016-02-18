@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+
+loadMangaTargets
+
+Created by José Sánchez-Gallego on 18 Feb 2016.
+Licensed under a 3-clause BSD license.
+
+Revision history:
+    18 Feb 2016 J. Sánchez-Gallego
+      Initial version
+
+"""
+
+from __future__ import division
+from __future__ import print_function
+import sys
+from mangaSampleDB.utils.mangaTargets import loadMangaTargets
+
+
+if __name__ == '__main__':
+    """Calls loadMangaTargets from the terminal."""
+
+    mangaTargetsExt = sys.argv[1]
+    loadMangaTargets(mangaTargetsExt)
