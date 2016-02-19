@@ -6,6 +6,7 @@ Database to house all the sample info specific to the MaNGA survey.
 
 Created by José Sánchez-Gallego starting April 2014.
 Updated by José Sánchez-Gallego in July 2015.
+Finished (with much rejoicing) by José Sánchez-Gallego in February 2015.
 
 */
 
