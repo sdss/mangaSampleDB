@@ -199,7 +199,6 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
                          .format(newCatTableName,
                                  newTableMatchCol, matchValue))).scalar()
             if not matchPK:
-                continue
                 raise ValueError('ERROR: creating table {0}: '
                                  'cannot find {1}={2} in {3}.'
                                  .format(relationalTableName,
