@@ -1,0 +1,135 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+parseMaNGACharacters
+
+Created by José Sánchez-Gallego on 30 Apr 2015.
+Licensed under a 3-clause BSD license.
+
+Revision history:
+    30 Apr 2015 J. Sánchez-Gallego
+      Initial version
+    18 Feb 2016 J. Sánchez-Gallego
+      Modified to also grab the anime/manga name.
+
+"""
+
+from __future__ import division
+from __future__ import print_function
+import requests
+import BeautifulSoup
+import os
+import shutil
+import sys
+import re
+from astropy import table
+import numpy as np
+
+nPages = 5905
+
+exclude = ['hitler', 'lenin', 'stalin']
+
+databaseName = 'characterDatabase.dat'
+if os.path.exists(databaseName):
+    database = table.Table.read(databaseName,
+                                format='ascii.fixed_width',
+                                delimiter='|')
+else:
+    database = table.Table(
+        None, names=['ID', 'identifier', 'name', 'manga', 'imageName',
+                     'url', 'page'],
+        dtype=[int, 'S50', 'S100', 'S100', 'S100', 'S500', int])
+
+imagesDir = './images'
+if not os.path.exists(imagesDir):
+    os.mkdir(imagesDir)
+
+for page in range(3, nPages + 1):
+
+    if page in database['page']:
+        continue
+
+    sys.stdout.write('\rPage {0}'.format(page))
+    sys.stdout.flush()
+
+    rr = requests.get('http://www.anime-planet.com/characters/all?page={0}'
+                      .format(page))
+
+    bs = BeautifulSoup.BeautifulSoup(rr.text)
+    rows = bs.find('table').find('tbody').findAll('tr')
+
+    for row in rows:
+
+        lowNames = [nn.lower() for nn in database['name']]
+
+        tds = row.findAll('td')
+        imageUrl = 'http://www.anime-planet.com/' + \
+            tds[0].find('img').attrs[1][1]
+        characterUrl = tds[0].find('a').attrs[0][1]
+        name = tds[1].find('a').getText()
+
+        anime = tds[2].find('a').getText() if tds[2].find('a') else None
+        if anime:
+            anime = re.sub(r"\W\([0-9]+\)", '', anime[anime.find('>') + 1:])
+
+        manga = tds[3].find('a').getText() if tds[3].find('a') else None
+        if manga:
+            manga = re.sub(r"\W\([0-9]+\)", '', manga[manga.find('>') + 1:])
+
+        if not anime and not manga:
+            continue
+
+        if anime and not manga:
+            manga = anime
+
+        if name[0] in '0123456789':
+            continue
+        if len(name) < 3:
+            continue
+        if name.lower() in lowNames:
+            continue
+
+        skip = False
+        for ex in exclude:
+            if ex in name.lower():
+                skip = True
+        if skip:
+            continue
+
+        imageName = os.path.join(imagesDir, os.path.basename(imageUrl))
+        if 'blank_main.jpg' in imageName:
+            continue
+        if len(imageName) > 100 or len(name) > 100:
+            continue
+
+        if not all(ord(cc) < 128 for cc in name):
+            continue
+
+        with open(imageName, 'wb') as handler:
+            data = requests.get(imageUrl, stream=True)
+            data.raw.decode_content = True
+            shutil.copyfileobj(data.raw, handler)
+
+        url = 'http://www.anime-planet.com' + tds[1].find('a').get('href')
+
+        try:
+            identifier = characterUrl.split('/')[-1]
+            if identifier in database['identifier']:
+                continue
+        except:
+            continue
+
+        if len(database) == 0:
+            ID = 1
+        else:
+            ID = np.max(database['ID']) + 1
+
+        database.add_row(
+            (ID, identifier, name, manga, os.path.basename(imageName), url, page))
+        lowNames.append(name.lower())
+
+    if len(database) > 0:
+        database.write(databaseName, format='ascii.fixed_width', delimiter='|')
+
+    if page > 20:
+        break
