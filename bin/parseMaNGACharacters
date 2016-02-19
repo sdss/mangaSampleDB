@@ -44,7 +44,12 @@ imagesDir = './images'
 if not os.path.exists(imagesDir):
     os.mkdir(imagesDir)
 
-for page in range(3, nPages + 1):
+if len(database) > 0:
+    maxPage = np.max(database['page'])
+else:
+    maxPage = 1
+
+for page in range(maxPage, nPages + 1):
 
     if page in database['page']:
         continue
@@ -68,25 +73,36 @@ for page in range(3, nPages + 1):
         characterUrl = tds[0].find('a').attrs[0][1]
         name = tds[1].find('a').getText()
 
-        anime = tds[2].find('a').getText() if tds[2].find('a') else None
-        if anime:
-            anime = re.sub(r"\W\([0-9]+\)", '', anime[anime.find('>') + 1:])
+        try:
+            anime = tds[2].find('a').getText() if tds[2].find('a') else None
+            if anime:
+                anime = re.sub(r'\W\([0-9]+\)', '',
+                               anime[anime.find('>') + 1:])
 
-        manga = tds[3].find('a').getText() if tds[3].find('a') else None
-        if manga:
-            manga = re.sub(r"\W\([0-9]+\)", '', manga[manga.find('>') + 1:])
+            manga = tds[3].find('a').getText() if tds[3].find('a') else None
+            if manga:
+                manga = re.sub(r'\W\([0-9]+\)', '',
+                               manga[manga.find('>') + 1:])
 
-        if not anime and not manga:
+            if not anime and not manga:
+                continue
+
+            if anime and not manga:
+                manga = anime
+
+        except:
             continue
 
-        if anime and not manga:
-            manga = anime
+        if re.match('^[\w|\s]+$', manga) is None:
+            continue
 
         if name[0] in '0123456789':
             continue
-        if len(name) < 3:
+        elif len(name) < 3:
             continue
-        if name.lower() in lowNames:
+        elif name.lower() in lowNames:
+            continue
+        elif re.match('^[\w|\s]+$', name) is None:
             continue
 
         skip = False
@@ -125,11 +141,9 @@ for page in range(3, nPages + 1):
             ID = np.max(database['ID']) + 1
 
         database.add_row(
-            (ID, identifier, name, manga, os.path.basename(imageName), url, page))
+            (ID, identifier, name, manga,
+             os.path.basename(imageName), url, page))
         lowNames.append(name.lower())
 
     if len(database) > 0:
         database.write(databaseName, format='ascii.fixed_width', delimiter='|')
-
-    if page > 20:
-        break
