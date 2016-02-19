@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+
+createMatchFile_NSA_v1_0_1
+
+Created by José Sánchez-Gallego on 19 Feb 2016.
+Licensed under a 3-clause BSD license.
+
+Revision history:
+    19 Feb 2016 J. Sánchez-Gallego
+      Initial version
+
+"""
+
+from __future__ import division
+from __future__ import print_function
+from astropy import table
+import sys
+import os
+
+
+match_description = """
+By definition, mangaids with catalogid=1 are simply the index of the target
+in the NSA v1_0_1 catalogue. As such, this matching is especially simple.
+For each mangaid, the corresponging target in NSA v1_0_1 is retrieved by
+splitting the mangaid string. I.e., mangaid=1-123456 corresponds to the target
+in NSA v1_0_1 with index 123456. The unique NSA target is defined by its NSAID.
+Note that this correspondance is ONLY VALID FOR NSA v1_0_1. Subsequent
+versions of the NSA catalogue will requiere matching with v1_0_1 before
+matching with mangaids.
+"""
+
+
+def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
+    """Creates the match and description files for NSA v1_0_1.
+
+    By definition, mangaids with catalogid=1 are simply the index of the target
+    in the NSA v1_0_1 catalogue. As such, this function is especially simple.
+    Note that this correspondance is ONLY VALID FOR NSA v1_0_1. Subsequent
+    versions of the NSA catalogue will requiere matching with v1_0_1 before
+    matching with mangaids.
+
+    Parameters
+    ----------
+    nsaCat : str
+        The path to the NSA v1_0_1 catalogue.
+    mangaTargetsExt : str
+        The path to the MaNGA_targets_extNSA catalogue.
+
+    Returns
+    -------
+        Produces two files. The first one, `nsa_v1_0_1_matched.fits`, contains
+        two columns, the first being `mangaid` and the second the matching
+        `nsaid`. The second file, `nsa_v1_0_1_matched.txt`, is a plain text
+        file with the explanation (very simple, in this case) of how the match
+        was done.
+
+    """
+
+    assert os.path.exists(nsaCat), 'NSA catalogue cannot be found'
+    assert os.path.exists(mangaTargetsExt), \
+        'MaNGA_targets_extNSA file cannot be found'
+
+    nsa = table.Table.read(nsaCat)
+    manga = table.Table.read(mangaTargetsExt)
+
+    mangaids = [mm.strip() for mm in manga['MANGAID']]
+    indices = [int(mm.split('-')[1]) for mm in mangaids]
+
+    nsaTargets = nsa[indices]
+    nsaIDs = nsaTargets['NSAID']
+
+    matchTable = table.Table([mangaids, nsaIDs], names=['mangaid', 'nsaid'],
+                             dtype=['S50', int])
+
+    if os.path.exists('nsa_v1_0_1_matched.fits'):
+        os.remove('nsa_v1_0_1_matched.fits')
+    matchTable.write('nsa_v1_0_1_matched.fits')
+
+    with open('nsa_v1_0_1_matched.txt', 'w') as unit:
+        unit.write('NSA v1_0_1 to mangaid matching file\n')
+        unit.write('-----------------------------------\n\n')
+        unit.write('Input catalogues\n')
+        unit.write('----------------\n')
+        unit.write('{0}\n{1}\n\n\n'.format(os.path.basename(nsaCat),
+                                           os.path.basename(mangaTargetsExt)))
+        unit.write('Description\n')
+        unit.write('------------')
+        unit.write(match_description)
+        unit.write('\n\n')
+
+
+if __name__ == '__main__':
+
+    nsaCat = sys.argv[1]
+    mangaTargetsExt = sys.argv[2]
+
+    createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt)
