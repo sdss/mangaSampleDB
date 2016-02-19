@@ -216,7 +216,7 @@ def ingestCatalogue(catfile, catname, version, replace=False, current=False,
 
         db.engine.execute(newTable.insert(data[nn:mm]))
 
-        if mm % 1000 == 0:
+        if mm % step == 0:
             sys.stdout.write(
                 'INFO: inserted {0} rows out of {1}.\r'.format(mm, nRows))
             sys.stdout.flush()
