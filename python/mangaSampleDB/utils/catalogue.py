@@ -18,6 +18,7 @@ from __future__ import print_function
 import sqlalchemy as sql
 from sqlalchemy.dialects import postgresql
 from SDSSconnect import DatabaseConnection
+from sqlalchemy.engine.reflection import Inspector
 from astropy import table
 import numpy as np
 import os
@@ -158,6 +159,14 @@ def ingestCatalogue(catfile, catname, version, current=False,
     session = db.Session()
     sampleDB = db.mangasampledb
 
+    # Checks if table already exists.
+    inspector = Inspector.from_engine(db.engine)
+    tables = inspector.get_table_names(schema='mangasampledb')
+
+    if catname in tables:
+        raise ValueError('table {0} already exists in mangasampledb. '
+                         'Drop it before continuing.'.format(catname))
+
     # Checks if the catalogue name and version already exists. If not, creates
     # the appropriate catalogue table
     with session.begin(subtransactions=True):
@@ -190,6 +199,7 @@ def ingestCatalogue(catfile, catname, version, current=False,
         if mm >= nRows:
             mm = nRows
 
+        # Replaces NaN in arrays with None.
         dataDict = {}
         for ii, colname in enumerate(colnames):
             try:
