@@ -185,21 +185,13 @@ def ingestCatalogue(catfile, catname, version, replace=False, current=False,
         camelTable = sampleDB.camelizeClassName(None, catname, None)
         newTable = sampleDB.Base.classes[camelTable].__table__
 
-    dataDict = {}
-    for ii, colname in enumerate(catData.colnames):
-        try:
-            dataDict[colname] = np.where(np.isnan(catData[colname]), None,
-                                         catData[colname])
-        except:
-            dataDict[colname] = catData[colname]
-
     colnames = catData.colnames
     nRows = len(catData)
     # nRows = 1000
 
     # Now we add the data. First we create a list of dictionaries with the data
-    data = [{colName.lower(): dataDict[colName][ii]
-             for colName in colnames} for ii in range(nRows)]
+    # data = [{colName.lower(): dataDict[colName][ii]
+    #          for colName in colnames} for ii in range(nRows)]
 
     print('INFO: now inserting ...')
     sys.stdout.write('INFO: inserted 0 rows out of {0}.\r'.format(nRows))
@@ -207,14 +199,27 @@ def ingestCatalogue(catfile, catname, version, replace=False, current=False,
 
     nn = 0
     step = 500
-    while nn < nRows:
+    while nn < 5000:
 
         mm = nn + step
 
         if mm >= nRows:
             mm = nRows
 
-        db.engine.execute(newTable.insert(data[nn:mm]))
+        dataDict = {}
+        for ii, colname in enumerate(colnames):
+            try:
+                dataDict[colname] = np.where(np.isnan(catData[colname][nn:mm]),
+                                             None,
+                                             catData[colname][nn:mm])
+            except:
+                dataDict[colname] = catData[colname][nn:mm]
+
+        dataLength = len(dataDict[colnames[0]])
+        data = [{colName.lower(): dataDict[colName][ii]
+                 for colName in colnames} for ii in range(dataLength)]
+
+        db.engine.execute(newTable.insert(data))
 
         if mm % step == 0:
             sys.stdout.write(
