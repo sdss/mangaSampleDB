@@ -69,6 +69,134 @@
 				<integer>190</integer>
 			</dict>
 			<key>ID</key>
+			<integer>209</integer>
+			<key>OrthogonalBarAutomatic</key>
+			<true/>
+			<key>OrthogonalBarPoint</key>
+			<string>{0, 0}</string>
+			<key>OrthogonalBarPosition</key>
+			<real>-1</real>
+			<key>Points</key>
+			<array>
+				<string>{793.71998228132725, 561.78628566759403}</string>
+				<string>{831.8382910158781, 286.31999668478966}</string>
+			</array>
+			<key>Style</key>
+			<dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Color</key>
+					<dict>
+						<key>b</key>
+						<real>0.40217399999999998</real>
+						<key>g</key>
+						<real>0.40217399999999998</real>
+						<key>r</key>
+						<real>0.40217399999999998</real>
+					</dict>
+					<key>HeadArrow</key>
+					<string>DoubleBar</string>
+					<key>HopLines</key>
+					<true/>
+					<key>HopType</key>
+					<integer>1</integer>
+					<key>Legacy</key>
+					<true/>
+					<key>LineType</key>
+					<integer>2</integer>
+					<key>TailArrow</key>
+					<string>CrowBar</string>
+					<key>Width</key>
+					<real>2</real>
+				</dict>
+			</dict>
+			<key>Tail</key>
+			<dict>
+				<key>ID</key>
+				<integer>187</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>AllowLabelDrop</key>
+			<false/>
+			<key>Class</key>
+			<string>LineGraphic</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>Helvetica</string>
+				<key>Size</key>
+				<real>12</real>
+			</dict>
+			<key>Head</key>
+			<dict>
+				<key>ID</key>
+				<integer>190</integer>
+			</dict>
+			<key>ID</key>
+			<integer>208</integer>
+			<key>Points</key>
+			<array>
+				<string>{757.71994885493211, 207.26277485011059}</string>
+				<string>{827.27998150885105, 206.6872075859973}</string>
+			</array>
+			<key>Style</key>
+			<dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Color</key>
+					<dict>
+						<key>b</key>
+						<real>0.40217399999999998</real>
+						<key>g</key>
+						<real>0.40217399999999998</real>
+						<key>r</key>
+						<real>0.40217399999999998</real>
+					</dict>
+					<key>HeadArrow</key>
+					<string>DoubleBar</string>
+					<key>Legacy</key>
+					<true/>
+					<key>TailArrow</key>
+					<string>CrowBar</string>
+					<key>Width</key>
+					<real>2</real>
+				</dict>
+			</dict>
+			<key>Tail</key>
+			<dict>
+				<key>ID</key>
+				<integer>186</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>AllowLabelDrop</key>
+			<false/>
+			<key>Class</key>
+			<string>LineGraphic</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>Helvetica</string>
+				<key>Size</key>
+				<real>12</real>
+			</dict>
+			<key>Head</key>
+			<dict>
+				<key>ID</key>
+				<integer>190</integer>
+			</dict>
+			<key>ID</key>
 			<integer>207</integer>
 			<key>OrthogonalBarAutomatic</key>
 			<true/>
@@ -93,11 +221,11 @@
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.402174</string>
+						<real>0.40217399999999998</real>
 						<key>g</key>
-						<string>0.402174</string>
+						<real>0.40217399999999998</real>
 						<key>r</key>
-						<string>0.402174</string>
+						<real>0.40217399999999998</real>
 					</dict>
 					<key>HeadArrow</key>
 					<string>DoubleBar</string>
@@ -801,11 +929,11 @@ manga_target_pk}</string>
 			<key>OrthogonalBarPoint</key>
 			<string>{0, 0}</string>
 			<key>OrthogonalBarPosition</key>
-			<real>13.374638389963991</real>
+			<real>13.372912171463383</real>
 			<key>Points</key>
 			<array>
-				<string>{576.26524234429166, 535.92147587776151}</string>
-				<string>{654.21451912421969, 549.4574939783422}</string>
+				<string>{576.25416101221197, 543.71958963399652}</string>
+				<string>{654.19998535513878, 561.78628566759403}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -1052,6 +1180,8 @@ manga_target_pk}</string>
 			<key>Magnets</key>
 			<array>
 				<string>{0.20511591888692138, -0.49640143713140517}</string>
+				<string>{-0.5, -0.077049196368060624}</string>
+				<string>{-0.4769782342984179, 0.5}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -1060,11 +1190,11 @@ manga_target_pk}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.871929</string>
+						<real>0.87192899999999995</real>
 						<key>g</key>
-						<string>1</string>
+						<real>1</real>
 						<key>r</key>
-						<string>0.864611</string>
+						<real>0.86461100000000002</real>
 					</dict>
 				</dict>
 				<key>shadow</key>
@@ -1079,11 +1209,11 @@ manga_target_pk}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.701087</string>
+						<real>0.70108700000000002</real>
 						<key>g</key>
-						<string>0.535383</string>
+						<real>0.53538300000000005</real>
 						<key>r</key>
-						<string>0.393729</string>
+						<real>0.393729</real>
 					</dict>
 					<key>Width</key>
 					<real>2</real>
@@ -1092,10 +1222,10 @@ manga_target_pk}</string>
 			<key>Text</key>
 			<dict>
 				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1387\cocoasubrtf100
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
 {\fonttbl\f0\fnil\fcharset0 Futura-CondensedExtraBold;\f1\fnil\fcharset0 Futura-Medium;}
 {\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc\partightenfactor0
 
 \f0\b\fs32 \cf0 \ul \ulc0 catalogue\
 
@@ -1256,6 +1386,10 @@ nsa_pk}</string>
 			</dict>
 			<key>ID</key>
 			<integer>187</integer>
+			<key>Magnets</key>
+			<array>
+				<string>{0.51101402632394421, 0.0022684332947173758}</string>
+			</array>
 			<key>Style</key>
 			<dict>
 				<key>fill</key>
@@ -1507,7 +1641,7 @@ mangaid}</string>
 
 \f0\b\fs52 \cf2 MaNGA Sample Database\
 
-\fs44 Rev: 0.1.1-dev
+\fs44 Rev: 0.2-dev
 \fs52 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc\partightenfactor0
 
@@ -1576,7 +1710,7 @@ mangaid}</string>
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-02-18 21:41:43 +0000</string>
+	<string>2016-02-19 17:18:55 +0000</string>
 	<key>Modifier</key>
 	<string>Albireo</string>
 	<key>NotesVisible</key>
@@ -1607,7 +1741,7 @@ mangaid}</string>
 		<key>NSPaperSize</key>
 		<array>
 			<string>size</string>
-			<string>{612.00002479553223, 792}</string>
+			<string>{612, 792}</string>
 		</array>
 		<key>NSPrintReverseOrientation</key>
 		<array>
@@ -1658,7 +1792,7 @@ mangaid}</string>
 		<key>Frame</key>
 		<string>{{4, -0}, {1436, 877}}</string>
 		<key>ShowInfo</key>
-		<false/>
+		<true/>
 		<key>ShowRuler</key>
 		<true/>
 		<key>Sidebar</key>
@@ -1668,7 +1802,7 @@ mangaid}</string>
 		<key>TopSlabHeight</key>
 		<real>250</real>
 		<key>VisibleRegion</key>
-		<string>{{-158, 0}, {1396.7213114754097, 720}}</string>
+		<string>{{-12, 0}, {1103.6065573770493, 720}}</string>
 		<key>Zoom</key>
 		<real>1.0166666666666666</real>
 		<key>ZoomValues</key>
