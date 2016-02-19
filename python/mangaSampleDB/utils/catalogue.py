@@ -199,7 +199,7 @@ def ingestCatalogue(catfile, catname, version, replace=False, current=False,
 
     nn = 0
     step = 500
-    while nn < 5000:
+    while nn < nRows:
 
         mm = nn + step
 
