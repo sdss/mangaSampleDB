@@ -130,8 +130,8 @@ def _createCatalogueRecord(db, session, catname, version,
             newCurrentCatalogue = db.mangasampledb.CurrentCatalogue(
                 catalogue_pk=newCatalogue.pk)
             session.add(newCurrentCatalogue)
-            warnings.warn('added {0} {1} as current catalogue'
-                          .format(catname, version), UserWarning)
+            print('INFO: added {0} {1} as current catalogue'
+                  .format(catname, version))
 
     return newCatalogue.pk
 
