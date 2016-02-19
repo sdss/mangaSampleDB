@@ -16,7 +16,7 @@ Revision history:
 from __future__ import division
 from __future__ import print_function
 import sys
-from mangaSampleDB.utils.mangaTargets import loadMangaTargets
+from mangaSampleDB.utils.targets import loadMangaTargets
 
 
 if __name__ == '__main__':

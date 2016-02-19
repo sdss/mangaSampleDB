@@ -2,7 +2,7 @@
 # encoding: utf-8
 """
 
-mangaTargets.py
+targets.py
 
 Created by José Sánchez-Gallego on 18 Feb 2016.
 Licensed under a 3-clause BSD license.
