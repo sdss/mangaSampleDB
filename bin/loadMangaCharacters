@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+
+loadMangaCharacters
+
+Created by José Sánchez-Gallego on 18 Feb 2016.
+Licensed under a 3-clause BSD license.
+
+Revision history:
+    18 Feb 2016 J. Sánchez-Gallego
+      Initial version
+
+"""
+
+from __future__ import division
+from __future__ import print_function
+import sys
+from mangaSampleDB.utils.mangaCharacters import loadMangaCharacters
+
+
+if __name__ == '__main__':
+    """Calls loadMangaCharacters from the terminal.
+
+    First argument must be the character list (text file). The second
+    argument is the directory containing the images.
+
+    """
+
+    mangaCharacterList = sys.argv[1]
+    imageDir = sys.argv[2]
+    loadMangaCharacters(mangaCharacterList, imageDir)

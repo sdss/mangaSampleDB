@@ -17,6 +17,8 @@ from __future__ import print_function
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import MetaData
 from sdss.internal.database.DatabaseConnection import DatabaseConnection
+import cStringIO
+import shutil
 import re
 
 
@@ -43,6 +45,20 @@ Base = automap_base(bind=engine, metadata=metadata)
 
 Base.prepare(engine, reflect=True, classname_for_table=camelizeClassName)
 
-# Explicitly declare classes
 for cl in Base.classes.keys():
     exec('{0} = Base.classes.{0}'.format(cl))
+
+
+# Adds customised methods to some tables.
+
+def savePicture(self, path):
+    """Saves the picture blob to disk."""
+
+    buf = cStringIO.StringIO(self.picture)
+    with open(path, 'w') as fd:
+        buf.seek(0)
+        shutil.copyfileobj(buf, fd)
+
+    return buf
+
+Character.savePicture = savePicture
