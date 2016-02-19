@@ -18,7 +18,6 @@ from __future__ import print_function
 import sqlalchemy as sql
 from sqlalchemy.dialects import postgresql
 from SDSSconnect import DatabaseConnection
-from sdss.internal.database import NumpyAdaptors
 from astropy import table
 import numpy as np
 import os
@@ -73,44 +72,44 @@ def _createNewTable(catName, catData, engine):
     return newTable
 
 
-def _updateColumns(catname, catData):
-    """Checks if new columns need to be added to an existing table."""
-
-    try:
-        from migrate import changeset
-    except:
-        raise RuntimeError('sqlalchemy-migrate is not installed. It is '
-                           'necessary to uptade table columns.')
-
-    from sdss.internal.database.utah.mangadb import SampleModelClasses
-
-    allTables = SampleModelClasses.Base.metadata.tables.keys()
-
-    if 'mangasampledb.' + catname not in allTables:
-        raise RuntimeError('error while trying to update table {0}. The '
-                           'table does not exist.'.format(catname))
-
-    camelTable = SampleModelClasses.camelizeClassName(
-        None, catname, None)
-
-    sqlTable = SampleModelClasses.Base.classes[camelTable].__table__
-    allColumns = (sqlTable.columns.keys())
-
-    newCols = []
-    for col in catData.colnames:
-        if col.lower() not in allColumns:
-            newCols.append(col)
-
-    try:
-        for colName in newCols:
-            dtype = catData.columns[colName].dtype.type
-            shape = catData.columns[colName].shape
-            sqlType = getPSQLtype(dtype, shape)
-            sqlColumn = sql.Column(colName.lower(), sqlType)
-            sqlColumn.create(sqlTable)
-    except Exception as ee:
-        raise RuntimeError('error found while trying to append column '
-                           '{0}: {1}'.format(colName, ee))
+# def _updateColumns(catname, catData):
+#     """Checks if new columns need to be added to an existing table."""
+#
+#     try:
+#         from migrate import changeset
+#     except:
+#         raise RuntimeError('sqlalchemy-migrate is not installed. It is '
+#                            'necessary to uptade table columns.')
+#
+#     from sdss.internal.database.utah.mangadb import SampleModelClasses
+#
+#     allTables = SampleModelClasses.Base.metadata.tables.keys()
+#
+#     if 'mangasampledb.' + catname not in allTables:
+#         raise RuntimeError('error while trying to update table {0}. The '
+#                            'table does not exist.'.format(catname))
+#
+#     camelTable = SampleModelClasses.camelizeClassName(
+#         None, catname, None)
+#
+#     sqlTable = SampleModelClasses.Base.classes[camelTable].__table__
+#     allColumns = (sqlTable.columns.keys())
+#
+#     newCols = []
+#     for col in catData.colnames:
+#         if col.lower() not in allColumns:
+#             newCols.append(col)
+#
+#     try:
+#         for colName in newCols:
+#             dtype = catData.columns[colName].dtype.type
+#             shape = catData.columns[colName].shape
+#             sqlType = getPSQLtype(dtype, shape)
+#             sqlColumn = sql.Column(colName.lower(), sqlType)
+#             sqlColumn.create(sqlTable)
+#     except Exception as ee:
+#         raise RuntimeError('error found while trying to append column '
+#                            '{0}: {1}'.format(colName, ee))
 
 
 def runTests(args):
@@ -134,8 +133,8 @@ def _checkValue(value):
         return np.where(np.isnan(value), None, value)
 
 
-def ingestCatalogue(catfile, catname, version, replace=False, current=False,
-                    match=None, connstring=None, **kwargs):
+def ingestCatalogue(catfile, catname, version, current=False,
+                    match=None, connstring=None, step=500, **kwargs):
     """Runs the catalogue ingestion."""
 
     # Runs some sanity checks
@@ -172,33 +171,18 @@ def ingestCatalogue(catfile, catname, version, replace=False, current=False,
     # Reads the catalogue file
     catData = table.Table.read(catfile, format='fits')
 
-    # If the catalogue table already exists, makes sure that all columns are
-    # present. Otherwise, creates the table with the right columns.
-    if catalogue is None:
-        try:
-            newTable = _createNewTable(catname, catData, db.engine)
-        except Exception as ee:
-            print('Exception found while creating table {0}: {1}'
-                  .format(catname, ee))
-    else:
-        _updateColumns(catname, catData)
-        camelTable = sampleDB.camelizeClassName(None, catname, None)
-        newTable = sampleDB.Base.classes[camelTable].__table__
+    # Creates the new table.
+    newTable = _createNewTable(catname, catData, db.engine)
 
     colnames = catData.colnames
     nRows = len(catData)
-    # nRows = 1000
-
-    # Now we add the data. First we create a list of dictionaries with the data
-    # data = [{colName.lower(): dataDict[colName][ii]
-    #          for colName in colnames} for ii in range(nRows)]
 
     print('INFO: now inserting ...')
+    print('INFO: inserting {0} rows at a time.'.format(step))
     sys.stdout.write('INFO: inserted 0 rows out of {0}.\r'.format(nRows))
     sys.stdout.flush()
 
     nn = 0
-    step = 500
     while nn < nRows:
 
         mm = nn + step
@@ -216,8 +200,19 @@ def ingestCatalogue(catfile, catname, version, replace=False, current=False,
                 dataDict[colname] = catData[colname][nn:mm]
 
         dataLength = len(dataDict[colnames[0]])
-        data = [{colName.lower(): dataDict[colName][ii]
-                 for colName in colnames} for ii in range(dataLength)]
+
+        # Some older versions of PosgreSQL seem to have problem when inserting
+        # an array of all NULLs. This ugly loop looks for those cases and
+        # replaces the array with a simple NULL.
+        data = []
+        for ii in range(dataLength):
+            dd = {}
+            for col in colnames:
+                value = dataDict[col][ii]
+                if not np.isscalar(value) and not np.any(value):
+                    value = None
+                dd[col.lower()] = value
+            data.append(dd)
 
         db.engine.execute(newTable.insert(data))
 

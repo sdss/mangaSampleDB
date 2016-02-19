@@ -51,10 +51,9 @@ def main(argv=None):
                               action='store_true',
                               help='Makes the catalogue being loaded the '
                                    'current version.')
-    parserIngest.add_argument('-r', '--replace', dest='replace',
-                              action='store_true',
-                              help='If the catalogue-version exists, '
-                              'removes its recodes before ingesting.')
+    parserIngest.add_argument('-s', '--step', dest='step',
+                              action='store', type=int, default=500,
+                              help='Number of rows to be inserted at a time.')
     parserIngest.add_argument('-m', '--match', dest='match', type=str,
                               action='store', nargs=2,
                               metavar=('MATCH_FILE', 'MATCH_DESCRIPTION'),
