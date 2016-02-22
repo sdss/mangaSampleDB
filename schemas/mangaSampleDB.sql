@@ -37,16 +37,11 @@ CREATE TABLE mangasampledb.manga_target_to_manga_target
 CREATE TABLE mangasampledb.character
     (pk SERIAL PRIMARY KEY NOT NULL,
      name TEXT, picture BYTEA,
-     manga_target_pk INTEGER);
+     anime_pk INTEGER, manga_target_pk INTEGER);
 
 CREATE TABLE mangasampledb.anime
     (pk SERIAL PRIMARY KEY NOT NULL,
      anime TEXT);
-
-CREATE TABLE mangasampledb.character_to_anime
-    (pk SERIAL PRIMARY KEY NOT NULL,
-     character_pk INTEGER,
-     anime_pk INTEGER);
 
 ALTER TABLE ONLY mangasampledb.manga_target_to_manga_target
     ADD CONSTRAINT manga_target1_fk FOREIGN KEY (manga_target1_pk)
@@ -58,16 +53,6 @@ ALTER TABLE ONLY mangasampledb.manga_target_to_manga_target
     REFERENCES mangasampledb.manga_target(pk)
     ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY mangasampledb.character_to_anime
-    ADD CONSTRAINT character_fk FOREIGN KEY (character_pk)
-    REFERENCES mangasampledb.character(pk)
-    ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY mangasampledb.character_to_anime
-    ADD CONSTRAINT anime_fk FOREIGN KEY (anime_pk)
-    REFERENCES mangasampledb.anime(pk)
-    ON UPDATE CASCADE ON DELETE CASCADE;
-
 ALTER TABLE ONLY mangasampledb.current_catalogue
     ADD CONSTRAINT catalogue_fk FOREIGN KEY (catalogue_pk)
     REFERENCES mangasampledb.catalogue(pk)
@@ -76,4 +61,9 @@ ALTER TABLE ONLY mangasampledb.current_catalogue
 ALTER TABLE ONLY mangasampledb.character
     ADD CONSTRAINT manga_target_fk FOREIGN KEY (manga_target_pk)
     REFERENCES mangasampledb.manga_target(pk)
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY mangasampledb.character
+    ADD CONSTRAINT anime_fk FOREIGN KEY (anime_pk)
+    REFERENCES mangasampledb.anime(pk)
     ON UPDATE CASCADE ON DELETE CASCADE;

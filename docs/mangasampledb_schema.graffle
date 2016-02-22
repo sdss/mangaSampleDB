@@ -522,191 +522,8 @@ manga_target2_pk}</string>
 			</dict>
 		</dict>
 		<dict>
-			<key>AllowLabelDrop</key>
-			<false/>
-			<key>Class</key>
-			<string>LineGraphic</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>Helvetica</string>
-				<key>Size</key>
-				<real>12</real>
-			</dict>
-			<key>Head</key>
-			<dict>
-				<key>ID</key>
-				<integer>199</integer>
-			</dict>
-			<key>ID</key>
-			<integer>200</integer>
-			<key>Points</key>
-			<array>
-				<string>{955.90477679160608, 495.79999269849156}</string>
-				<string>{956.07752833966015, 433.15997633564643}</string>
-			</array>
-			<key>Style</key>
-			<dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Color</key>
-					<dict>
-						<key>b</key>
-						<string>0.402174</string>
-						<key>g</key>
-						<string>0.402174</string>
-						<key>r</key>
-						<string>0.402174</string>
-					</dict>
-					<key>HeadArrow</key>
-					<string>CrowBall</string>
-					<key>Legacy</key>
-					<true/>
-					<key>TailArrow</key>
-					<string>DoubleBar</string>
-					<key>Width</key>
-					<real>2</real>
-				</dict>
-			</dict>
-			<key>Tail</key>
-			<dict>
-				<key>ID</key>
-				<integer>197</integer>
-			</dict>
-		</dict>
-		<dict>
 			<key>Bounds</key>
-			<string>{{870.47998054325581, 337.1599927097559}, {170.63999618589878, 95}}</string>
-			<key>Class</key>
-			<string>ShapedGraphic</string>
-			<key>FitText</key>
-			<string>Vertical</string>
-			<key>Flow</key>
-			<string>Resize</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>Futura-Medium</string>
-			</dict>
-			<key>ID</key>
-			<integer>199</integer>
-			<key>Style</key>
-			<dict>
-				<key>fill</key>
-				<dict>
-					<key>Color</key>
-					<dict>
-						<key>b</key>
-						<string>0.95933</string>
-						<key>g</key>
-						<string>0.96831</string>
-						<key>r</key>
-						<string>0.714307</string>
-					</dict>
-				</dict>
-				<key>shadow</key>
-				<dict>
-					<key>Fuzziness</key>
-					<real>5.1873583793640137</real>
-					<key>ShadowVector</key>
-					<string>{3, 3}</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Color</key>
-					<dict>
-						<key>b</key>
-						<string>0.701087</string>
-						<key>g</key>
-						<string>0.535383</string>
-						<key>r</key>
-						<string>0.393729</string>
-					</dict>
-					<key>Width</key>
-					<real>2</real>
-				</dict>
-			</dict>
-			<key>Text</key>
-			<dict>
-				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1387\cocoasubrtf100
-{\fonttbl\f0\fnil\fcharset0 Futura-CondensedExtraBold;\f1\fnil\fcharset0 Futura-Medium;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
-
-\f0\b\fs32 \cf0 \ul \ulc0 character_to_anime\
-
-\f1\b0 \ulnone pk\
-character_pk\
-anime_pk}</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>AllowLabelDrop</key>
-			<false/>
-			<key>Class</key>
-			<string>LineGraphic</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>Helvetica</string>
-				<key>Size</key>
-				<real>12</real>
-			</dict>
-			<key>Head</key>
-			<dict>
-				<key>ID</key>
-				<integer>199</integer>
-			</dict>
-			<key>ID</key>
-			<integer>198</integer>
-			<key>Points</key>
-			<array>
-				<string>{793.71998228132099, 384.65968933880788}</string>
-				<string>{869.47998054327763, 384.65942308089546}</string>
-			</array>
-			<key>Style</key>
-			<dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Color</key>
-					<dict>
-						<key>b</key>
-						<string>0.402174</string>
-						<key>g</key>
-						<string>0.402174</string>
-						<key>r</key>
-						<string>0.402174</string>
-					</dict>
-					<key>HeadArrow</key>
-					<string>CrowBall</string>
-					<key>Legacy</key>
-					<true/>
-					<key>TailArrow</key>
-					<string>DoubleBar</string>
-					<key>Width</key>
-					<real>2</real>
-				</dict>
-			</dict>
-			<key>Tail</key>
-			<dict>
-				<key>ID</key>
-				<integer>195</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>Bounds</key>
-			<string>{{870.47998054325581, 496.79998889565468}, {170.63999618589878, 74}}</string>
+			<string>{{887.39998016506433, 347.6599927097559}, {170.63999618589878, 74}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -727,11 +544,11 @@ anime_pk}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.871929</string>
+						<real>0.87192899999999995</real>
 						<key>g</key>
-						<string>1</string>
+						<real>1</real>
 						<key>r</key>
-						<string>0.864611</string>
+						<real>0.86461100000000002</real>
 					</dict>
 				</dict>
 				<key>shadow</key>
@@ -746,11 +563,11 @@ anime_pk}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.701087</string>
+						<real>0.70108700000000002</real>
 						<key>g</key>
-						<string>0.535383</string>
+						<real>0.53538300000000005</real>
 						<key>r</key>
-						<string>0.393729</string>
+						<real>0.393729</real>
 					</dict>
 					<key>Width</key>
 					<real>2</real>
@@ -759,10 +576,10 @@ anime_pk}</string>
 			<key>Text</key>
 			<dict>
 				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1387\cocoasubrtf100
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
 {\fonttbl\f0\fnil\fcharset0 Futura-CondensedExtraBold;\f1\fnil\fcharset0 Futura-Medium;}
 {\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc\partightenfactor0
 
 \f0\b\fs32 \cf0 \ul \ulc0 anime\
 
@@ -794,11 +611,11 @@ anime}</string>
 			<key>OrthogonalBarPoint</key>
 			<string>{0, 0}</string>
 			<key>OrthogonalBarPosition</key>
-			<real>20.746431553510206</real>
+			<real>19.306517660976397</real>
 			<key>Points</key>
 			<array>
-				<string>{528.39355560004969, 364.25763178517036}</string>
-				<string>{621.08641870707015, 374.82235431025816}</string>
+				<string>{528.39330780423188, 364.44717202982423}</string>
+				<string>{618.20634312618472, 374.88091938070517}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -812,11 +629,11 @@ anime}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.402174</string>
+						<real>0.40217399999999998</real>
 						<key>g</key>
-						<string>0.402174</string>
+						<real>0.40217399999999998</real>
 						<key>r</key>
-						<string>0.402174</string>
+						<real>0.40217399999999998</real>
 					</dict>
 					<key>HeadArrow</key>
 					<string>BarBall</string>
@@ -838,7 +655,7 @@ anime}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{622.07998609542847, 326.1599927097559}, {170.63999618589878, 117}}</string>
+			<string>{{619.19998615980148, 315.6599927097559}, {170.63999618589878, 138}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -859,11 +676,11 @@ anime}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.871929</string>
+						<real>0.87192899999999995</real>
 						<key>g</key>
-						<string>1</string>
+						<real>1</real>
 						<key>r</key>
-						<string>0.864611</string>
+						<real>0.86461100000000002</real>
 					</dict>
 				</dict>
 				<key>shadow</key>
@@ -878,11 +695,11 @@ anime}</string>
 					<key>Color</key>
 					<dict>
 						<key>b</key>
-						<string>0.701087</string>
+						<real>0.70108700000000002</real>
 						<key>g</key>
-						<string>0.535383</string>
+						<real>0.53538300000000005</real>
 						<key>r</key>
-						<string>0.393729</string>
+						<real>0.393729</real>
 					</dict>
 					<key>Width</key>
 					<real>2</real>
@@ -891,17 +708,17 @@ anime}</string>
 			<key>Text</key>
 			<dict>
 				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1386\cocoasubrtf120
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
 {\fonttbl\f0\fnil\fcharset0 Futura-CondensedExtraBold;\f1\fnil\fcharset0 Futura-Medium;}
 {\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc\partightenfactor0
 
 \f0\b\fs32 \cf0 \ul \ulc0 character\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
-\f1\b0 \cf0 \ulnone pk\
+\f1\b0 \ulnone pk\
 name\
 picture [blob]\
+anime_pk\
 manga_target_pk}</string>
 			</dict>
 		</dict>
@@ -1641,7 +1458,7 @@ mangaid}</string>
 
 \f0\b\fs52 \cf2 MaNGA Sample Database\
 
-\fs44 Rev: 0.2-dev
+\fs44 Rev: 0.3-dev
 \fs52 \
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc\partightenfactor0
 
@@ -1656,6 +1473,64 @@ mangaid}</string>
 			</dict>
 			<key>Wrap</key>
 			<string>NO</string>
+		</dict>
+		<dict>
+			<key>AllowLabelDrop</key>
+			<false/>
+			<key>Class</key>
+			<string>LineGraphic</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>Helvetica</string>
+				<key>Size</key>
+				<real>12</real>
+			</dict>
+			<key>Head</key>
+			<dict>
+				<key>ID</key>
+				<integer>197</integer>
+			</dict>
+			<key>ID</key>
+			<integer>210</integer>
+			<key>Points</key>
+			<array>
+				<string>{790.83998224893298, 384.69796708258082}</string>
+				<string>{886.39998059467507, 384.74000636766624}</string>
+			</array>
+			<key>Style</key>
+			<dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Color</key>
+					<dict>
+						<key>b</key>
+						<real>0.40217399999999998</real>
+						<key>g</key>
+						<real>0.40217399999999998</real>
+						<key>r</key>
+						<real>0.40217399999999998</real>
+					</dict>
+					<key>HeadArrow</key>
+					<string>BarBall</string>
+					<key>Legacy</key>
+					<true/>
+					<key>TailArrow</key>
+					<string>CrowBall</string>
+					<key>Width</key>
+					<real>2</real>
+				</dict>
+			</dict>
+			<key>Tail</key>
+			<dict>
+				<key>ID</key>
+				<integer>195</integer>
+			</dict>
 		</dict>
 	</array>
 	<key>GridInfo</key>
@@ -1710,7 +1585,7 @@ mangaid}</string>
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2016-02-19 17:18:55 +0000</string>
+	<string>2016-02-22 00:54:19 +0000</string>
 	<key>Modifier</key>
 	<string>Albireo</string>
 	<key>NotesVisible</key>
@@ -1741,7 +1616,7 @@ mangaid}</string>
 		<key>NSPaperSize</key>
 		<array>
 			<string>size</string>
-			<string>{612, 792}</string>
+			<string>{612.00002479553223, 792}</string>
 		</array>
 		<key>NSPrintReverseOrientation</key>
 		<array>

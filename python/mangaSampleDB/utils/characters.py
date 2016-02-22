@@ -69,14 +69,6 @@ def loadMangaCharacters(characterList, imageDir):
             if len(nameQuery) > 0:
                 continue
 
-            newChar = db.mangasampledb.Character()
-            newChar.name = name
-            newChar.picture = image
-            newChar.manga_target_pk = None
-
-            session.add(newChar)
-            session.flush()
-
             animeQuery = session.query(db.mangasampledb.Anime).filter(
                 db.mangasampledb.Anime.anime == animeName).all()
 
@@ -88,7 +80,10 @@ def loadMangaCharacters(characterList, imageDir):
             else:
                 anime = animeQuery[0]
 
-            newCharacterToAnime = db.mangasampledb.CharacterToAnime()
-            newCharacterToAnime.character_pk = newChar.pk
-            newCharacterToAnime.anime_pk = anime.pk
-            session.add(newCharacterToAnime)
+            newChar = db.mangasampledb.Character()
+            newChar.name = name
+            newChar.picture = image
+            newChar.manga_target_pk = None
+            newChar.anime_pk = anime.pk
+
+            session.add(newChar)
