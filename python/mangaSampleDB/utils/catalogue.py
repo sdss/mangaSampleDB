@@ -186,32 +186,34 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
 
     configure_mappers()
 
-    pairs = [
-        (matchCat['mangaid'][ii],
-         matchCat[matchCol][ii]) for ii in range(len(matchCat))]
-
-    points = np.arange(len(pairs))
-    nSlice = 1000
-    intervals = np.append(np.arange(0, len(pairs), nSlice), points[-1] + 1)
-
     print('INFO: loading data into {0} ...'.format(relationalTableName))
 
-    for ii in range(len(intervals) - 1):
-        pairsSlice = pairs[intervals[ii]:intervals[ii + 1]]
-        pks = session.query(
-            db.mangasampledb.MangaTarget.pk, NewCatTable.pk).filter(
-                sql.tuple_(
-                    db.mangasampledb.MangaTarget.mangaid,
-                    getattr(NewCatTable, matchCol)).in_(pairsSlice)).all()
+    # Gets information for pks and mangaids from MangaTarget
+    mangaTargetData = session.query(db.mangasampledb.MangaTarget.pk,
+                                    db.mangasampledb.MangaTarget.mangaid).all()
+    mangaIds = np.array(zip(*mangaTargetData)[1])
+    mangaTargetPks = np.array(zip(*mangaTargetData)[0])
 
-        if len(pks) == 0:
+    # Does the same with the new catalogue table, using the match column
+    matchColData = session.query(
+        NewCatTable.pk, getattr(NewCatTable, matchCol)).all()
+
+    newTableMatchValues = np.array(zip(*matchColData)[1])
+    newTableMatchPks = np.array(zip(*matchColData)[0])
+
+    # Builds the insert dictionary making sure we get information about both
+    # mangaid and new catalogue match column.
+    insertData = []
+    for mangaid, matchVal in matchCat:
+        if mangaid not in mangaIds or matchVal not in newTableMatchValues:
             continue
+        mangaTargetPk = mangaTargetPks[np.where(mangaIds == mangaid)][0]
+        newTableMatchPk = newTableMatchPks[np.where(newTableMatchValues == matchVal)][0]
+        insertData.append({'manga_target_pk': mangaTargetPk,
+                           '{0}_pk'.format(newCatTableName): newTableMatchPk})
 
-        insertData = [
-            {'manga_target_pk': pk[0],
-             '{0}_pk'.format(newCatTableName): pk[1]} for pk in pks]
-
-        db.engine.execute(RelationalTable.__table__.insert(insertData))
+    # Inserts the data
+    db.engine.execute(RelationalTable.__table__.insert(insertData))
 
 # def _updateColumns(catname, catData):
 #     """Checks if new columns need to be added to an existing table."""
