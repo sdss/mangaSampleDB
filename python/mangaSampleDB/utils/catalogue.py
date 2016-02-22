@@ -204,6 +204,9 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
                     db.mangasampledb.MangaTarget.mangaid,
                     getattr(NewCatTable, matchCol)).in_(pairsSlice)).all()
 
+        if len(pks) == 0:
+            continue
+
         insertData = [
             {'manga_target_pk': pk[0],
              '{0}_pk'.format(newCatTableName): pk[1]} for pk in pks]
