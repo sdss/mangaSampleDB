@@ -341,7 +341,7 @@ def ingestCatalogue(catfile, catname, version, current=True,
     sys.stdout.flush()
 
     nn = 0
-    while nn < 500:
+    while nn < nRows:
 
         mm = nn + step
 
