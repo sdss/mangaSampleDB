@@ -66,12 +66,14 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
     manga = table.Table.read(mangaTargetsExt)
 
     mangaids = [mm.strip() for mm in manga['MANGAID']]
-    indices = [int(mm.split('-')[1]) for mm in mangaids]
+    mangaids_cat1 = [mangaid for mangaid in mangaids
+                     if mangaid.split('-')[0] == '1']
+    indices = [int(mm.split('-')[1]) for mm in mangaids_cat1]
 
     nsaTargets = nsa[indices]
     nsaIDs = nsaTargets['NSAID']
 
-    matchTable = table.Table([mangaids, nsaIDs], names=['mangaid', 'nsaid'],
+    matchTable = table.Table([mangaids_cat1, nsaIDs], names=['mangaid', 'nsaid'],
                              dtype=['S50', int])
 
     if os.path.exists('nsa_v1_0_1_matched.fits'):
