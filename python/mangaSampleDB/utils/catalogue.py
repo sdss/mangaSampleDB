@@ -208,7 +208,8 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
         if mangaid not in mangaIds or matchVal not in newTableMatchValues:
             continue
         mangaTargetPk = mangaTargetPks[np.where(mangaIds == mangaid)][0]
-        newTableMatchPk = newTableMatchPks[np.where(newTableMatchValues == matchVal)][0]
+        newTableMatchPk = newTableMatchPks[
+            np.where(newTableMatchValues == matchVal)][0]
         insertData.append({'manga_target_pk': mangaTargetPk,
                            '{0}_pk'.format(newCatTableName): newTableMatchPk})
 
