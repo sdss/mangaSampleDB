@@ -145,8 +145,8 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
     inspector = Inspector.from_engine(db.engine)
     tables = inspector.get_table_names(schema='mangasampledb')
 
-    newTableMatchCol = [col.lower() for col in matchCat.colnames
-                        if col.lower() != 'mangaid'][0]
+    matchCol = [col.lower() for col in matchCat.colnames
+                if col.lower() != 'mangaid'][0]
 
     relationalTableName = 'manga_target_to_{0}'.format(newCatTableName)
 
@@ -168,6 +168,7 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
             __table__ = relationalTable
 
         mapper(RelationalTable, relationalTable)
+        print('INFO: created table {0}'.format(relationalTableName))
 
     else:
         warnings.warn('table {0} already exists'.format(relationalTableName),
@@ -177,49 +178,37 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
 
         class RelationalTable(decBase):
             __tablename__ = relationalTableName
-            __table_args__ = {'autoload': True, 'schema': 'mangasampledb'}
+            __table_args__ = (
+                sql.UniqueConstraint(
+                    'manga_target_pk', '{0}_pk'.format(newCatTableName),
+                    name='manga_target_{0}_ff'.format(newCatTableName)),
+                {'autoload': True, 'schema': 'mangasampledb'})
 
     configure_mappers()
 
-    with session.begin():
+    pairs = [
+        (matchCat['mangaid'][ii],
+         matchCat[matchCol][ii]) for ii in range(len(matchCat))]
 
-        for mangaid, matchValue in matchCat:
+    points = np.arange(len(pairs))
+    nSlice = 1000
+    intervals = np.append(np.arange(0, len(pairs), nSlice), points[-1] + 1)
 
-            mangaTargetPK = session.query(
-                db.mangasampledb.MangaTarget.pk).filter(
-                    db.mangasampledb.MangaTarget.mangaid == mangaid.strip()
-            ).scalar()
-            if not mangaTargetPK:
-                raise ValueError('ERROR: creating table {0}: '
-                                 'cannot find mangaid={1} in manga_target.'
-                                 .format(relationalTableName, mangaid))
+    print('INFO: loading data into {0} ...'.format(relationalTableName))
 
-            matchPK = session.query(NewCatTable.pk).filter(
-                sql.text('{0}.{1} = {2}'
-                         .format(newCatTableName,
-                                 newTableMatchCol, matchValue))).scalar()
-            if not matchPK:
-                raise ValueError('ERROR: creating table {0}: '
-                                 'cannot find {1}={2} in {3}.'
-                                 .format(relationalTableName,
-                                         newTableMatchCol,
-                                         matchValue,
-                                         newCatTableName))
+    for ii in range(len(intervals) - 1):
+        pairsSlice = pairs[intervals[ii]:intervals[ii + 1]]
+        pks = session.query(
+            db.mangasampledb.MangaTarget.pk, NewCatTable.pk).filter(
+                sql.tuple_(
+                    db.mangasampledb.MangaTarget.mangaid,
+                    getattr(NewCatTable, matchCol)).in_(pairsSlice)).all()
 
-            # Check if the record already exists
-            matchRecord = session.query(RelationalTable.pk).filter(
-                RelationalTable.manga_target_pk == mangaTargetPK,
-                sql.text('{0}.{1}_pk = {2}'.format(relationalTableName,
-                                                   newCatTableName, matchPK))
-            ).scalar()
+        insertData = [
+            {'manga_target_pk': pk[0],
+             '{0}_pk'.format(newCatTableName): pk[1]} for pk in pks]
 
-            if matchRecord:
-                continue
-            else:
-                newRecord = RelationalTable()
-                newRecord.manga_target_pk = mangaTargetPK
-                setattr(newRecord, '{0}_pk'.format(newCatTableName), matchPK)
-                session.add(newRecord)
+        db.engine.execute(RelationalTable.__table__.insert(insertData))
 
 # def _updateColumns(catname, catData):
 #     """Checks if new columns need to be added to an existing table."""
@@ -352,7 +341,7 @@ def ingestCatalogue(catfile, catname, version, current=True,
     sys.stdout.flush()
 
     nn = 0
-    while nn < nRows:
+    while nn < 500:
 
         mm = nn + step
 
