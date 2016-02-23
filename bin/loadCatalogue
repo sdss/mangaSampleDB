@@ -54,6 +54,11 @@ def main(argv=None):
     parserIngest.add_argument('-s', '--step', dest='step',
                               action='store', type=int, default=500,
                               help='Number of rows to be inserted at a time.')
+    parserIngest.add_argument('-l', '--limit', dest='limit',
+                              action='store_true',
+                              help='if set, only catalogue targets that '
+                              'match the MaNGA sample will be added. Requires '
+                              '--match to be set.')
     parserIngest.add_argument('-m', '--match', dest='match', type=str,
                               action='store', nargs=2,
                               metavar=('MATCH_FILE', 'MATCH_DESCRIPTION'),

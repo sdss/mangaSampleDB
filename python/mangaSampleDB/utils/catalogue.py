@@ -278,7 +278,8 @@ def _checkValue(value):
 
 
 def ingestCatalogue(catfile, catname, version, current=True,
-                    match=None, connstring=None, step=500, **kwargs):
+                    match=None, connstring=None, step=500,
+                    limit=False, **kwargs):
     """Runs the catalogue ingestion."""
 
     # Runs some sanity checks
@@ -291,6 +292,9 @@ def ingestCatalogue(catfile, catname, version, current=True,
                                       'cannot be identical.')
 
     assert os.path.exists(catfile), 'CATFILE could not be found.'
+
+    if limit and not match:
+        raise ValueError('limit=True but match not set.')
 
     # Creates the appropriate connection to the DB.
     if connstring is None:
@@ -318,7 +322,9 @@ def ingestCatalogue(catfile, catname, version, current=True,
 
     if catalogue is not None:
         catPK = catalogue
-        warnings.warn('(CATNAME, VERSION) already exist in mangaSampleDB.',
+        warnings.warn('(CATNAME, VERSION)=({0}, {1}) '
+                      'already exist in mangaSampleDB.'
+                      .format(catname, version),
                       UserWarning)
     else:
         print('INFO: creating record in mangasampledb.catalogue for '
@@ -332,8 +338,15 @@ def ingestCatalogue(catfile, catname, version, current=True,
     # Reads matching file, if any
     if match:
         matchCat = table.Table.read(match[0])
+        matchCol = [col.upper() for col in matchCat.colnames
+                    if col.lower() != 'mangaid'][0]
     else:
         matchCat = None
+
+    if limit:
+        validIndx = np.where(np.in1d(catData[matchCol],
+                                     matchCat[matchCol.lower()]))[0]
+        catData = catData[validIndx]
 
     # Creates the new table.
     NewCatTable = _createNewTable(catname, catData, db.engine)
@@ -380,7 +393,8 @@ def ingestCatalogue(catfile, catname, version, current=True,
             dd['catalogue_pk'] = catPK
             data.append(dd)
 
-        db.engine.execute(NewCatTable.__table__.insert(data))
+        if len(data) > 0:
+            db.engine.execute(NewCatTable.__table__.insert(data))
 
         if mm % step == 0:
             sys.stdout.write(
