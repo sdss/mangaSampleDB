@@ -19,6 +19,7 @@ from SDSSconnect import DatabaseConnection
 import warnings
 from astropy import table
 import os
+import sys
 
 
 def _warning(message, category=UserWarning, filename='', lineno=-1):
@@ -49,19 +50,29 @@ def loadMangaCharacters(characterList, imageDir):
     session = db.Session()
 
     characters = table.Table.read(characterList, format='ascii.fixed_width')
+    nCharacter = len(characters)
 
-    for character in characters:
-        name = character['name'].strip()
-        imagePath = os.path.join(imageDir, character['imageName'])
-        animeName = character['manga']
+    sys.stdout.write('INFO: inserting character 0 ut of {0}.\r'
+                     .format(nCharacter))
+    sys.stdout.flush()
 
-        if not os.path.exists(imagePath):
-            warnings.warn('image for {0} cannot be found. Skipping character.'
-                          .format(name))
+    with session.begin():
 
-        image = open(imagePath, 'rb').read()
+        for ii, character in enumerate(characters):
 
-        with session.begin():
+            sys.stdout.write('INFO: inserting character {0} ut of {1}.\r'
+                             .format(ii + 1, nCharacter))
+            sys.stdout.flush()
+
+            name = character['name'].strip()
+            imagePath = os.path.join(imageDir, character['imageName'])
+            animeName = character['manga']
+
+            if not os.path.exists(imagePath):
+                warnings.warn('image for {0} cannot be found. '
+                              'Skipping character.'.format(name))
+
+            image = open(imagePath, 'rb').read()
 
             nameQuery = session.query(db.mangasampledb.Character).filter(
                 db.mangasampledb.Character.name == name).all()
@@ -87,3 +98,5 @@ def loadMangaCharacters(characterList, imageDir):
             newChar.anime_pk = anime.pk
 
             session.add(newChar)
+
+    print()
