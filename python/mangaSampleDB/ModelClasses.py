@@ -19,6 +19,7 @@ from __future__ import print_function
 from sdss.internal.database.DatabaseConnection import DatabaseConnection
 from sqlalchemy.orm import relationship, configure_mappers, backref
 from sqlalchemy.inspection import inspect
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy import ForeignKeyConstraint
 import re
 
@@ -108,6 +109,29 @@ class MangaTargetToMangaTarget(Base):
     def __repr__(self):
         return '<MangaTargetToMangaTarget (pk={0})>'.format(self.pk)
 
+
+class NSA(Base):
+    __tablename__ = 'nsa'
+    __table_args__ = (
+        ForeignKeyConstraint(['catalogue_pk'], ['mangasampledb.catalogue.pk']),
+        {'autoload': True, 'schema': 'mangasampledb'})
+
+    def __repr__(self):
+        return '<NSA (pk={0}, nsaid={1})>'.format(self.pk, self.nsaid)
+
+
+class MangaTargetToNSA(Base):
+    __tablename__ = 'manga_target_to_nsa'
+    __table_args__ = (
+        ForeignKeyConstraint(['manga_target_pk'],
+                             ['mangasampledb.manga_target.pk']),
+        ForeignKeyConstraint(['nsa_pk'], ['mangasampledb.nsa.pk']),
+        {'autoload': True, 'schema': 'mangasampledb'})
+
+    def __repr__(self):
+        return '<MangaTargetToNSA (pk={0})>'.format(self.pk)
+
+
 # Now we create the remaining tables.
 insp = inspect(db.engine)
 schemaName = 'mangasampledb'
@@ -117,7 +141,7 @@ done_names = db.Base.metadata.tables.keys()
 for tableName in allTables:
     if schemaName + '.' + tableName in done_names:
         continue
-    className = cameliseClassname(str(tableName))
+    className = str(tableName).upper()
 
     newClass = ClassFactory(
         className, tableName,
@@ -129,7 +153,7 @@ for tableName in allTables:
 
     if 'manga_target_to_' + tableName in allTables:
         relationalTableName = 'manga_target_to_' + tableName
-        relationalClassName = cameliseClassname(str(relationalTableName))
+        relationalClassName = 'MangaTargetTo' + tableName.upper()
         newRelationalClass = ClassFactory(
             relationalClassName, relationalTableName,
             fks=[('manga_target_pk', 'mangasampledb.manga_target.pk'),
@@ -141,5 +165,62 @@ for tableName in allTables:
         newClass.mangaTargets = relationship(
             MangaTarget, backref='{0}_objects'.format(tableName),
             secondary=newRelationalClass.__table__)
+
+
+def HybridProperty(parameter, index=None):
+
+    @hybrid_property
+    def hybridProperty(self):
+        if index is not None:
+            return getattr(self, parameter)[index]
+        else:
+            return getattr(self, parameter)
+
+    @hybridProperty.expression
+    def hybridProperty(cls):
+        if index is not None:
+            # It needs to be index + 1 because Postgresql arrays are 1-indexed.
+            return getattr(cls, parameter)[index + 1]
+        else:
+            return getattr(cls, parameter)
+
+    return hybridProperty
+
+
+def HybridColour(parameter):
+
+    @hybrid_method
+    def colour(self, bandA, bandB):
+
+        for band in [bandA, bandB]:
+            columnName = parameter + '_' + band
+            assert hasattr(self, columnName), \
+                'cannot find column {0}'.format(columnName)
+
+        bandA_param = getattr(self, parameter + '_' + bandA)
+        bandB_param = getattr(self, parameter + '_' + bandB)
+
+        return bandA_param - bandB_param
+
+    @colour.expression
+    def colour(cls, bandA, bandB):
+
+        for band in [bandA, bandB]:
+            columnName = parameter + '_' + band
+            assert hasattr(cls, columnName), \
+                'cannot find column {0}'.format(columnName)
+
+        bandA_param = getattr(cls, parameter + '_' + bandA)
+        bandB_param = getattr(cls, parameter + '_' + bandB)
+
+        return bandA_param - bandB_param
+
+    return colour
+
+# Adds hybrid properties defining colours for petroth50_el (for now).
+for ii, band in enumerate('FNurgiz'):
+    propertyName = 'petroth50_el_{0}'.format(band)
+    setattr(NSA, propertyName, HybridProperty('petroth50_el', ii))
+    setattr(NSA, 'petroth50_el_colour', HybridColour('petroth50_el'))
 
 configure_mappers()
