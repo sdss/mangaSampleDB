@@ -21,6 +21,8 @@ from sqlalchemy.orm import relationship, configure_mappers, backref
 from sqlalchemy.inspection import inspect
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy import ForeignKeyConstraint
+import cStringIO
+import shutil
 import re
 
 db = DatabaseConnection()
@@ -75,6 +77,16 @@ class Character(Base):
 
     def __repr__(self):
         return '<Character (pk={0}, name={1})>'.format(self.pk, self.name)
+
+    def savePicture(self, path):
+        """Saves the picture blob to disk."""
+
+        buf = cStringIO.StringIO(self.picture)
+        with open(path, 'w') as fd:
+            buf.seek(0)
+            shutil.copyfileobj(buf, fd)
+
+        return buf
 
 
 class Catalogue(Base):
