@@ -143,6 +143,9 @@ class MangaTargetToNSA(Base):
     def __repr__(self):
         return '<MangaTargetToNSA (pk={0})>'.format(self.pk)
 
+# Relationship between NSA and MangaTarget
+NSA.mangaTargets = relationship(
+    MangaTarget, backref='NSA_objects', secondary=MangaTargetToNSA.__table__)
 
 # Now we create the remaining tables.
 insp = inspect(db.engine)
