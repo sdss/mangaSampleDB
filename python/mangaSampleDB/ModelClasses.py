@@ -20,10 +20,15 @@ from sdss.internal.database.DatabaseConnection import DatabaseConnection
 from sqlalchemy.orm import relationship, configure_mappers, backref
 from sqlalchemy.inspection import inspect
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy import ForeignKeyConstraint
-import cStringIO
+from sqlalchemy import ForeignKeyConstraint, func
 import shutil
 import re
+import math
+
+try:
+    import cStringIO as StringIO
+except ImportError:
+    from io import StringIO
 
 db = DatabaseConnection()
 Base = db.Base
@@ -81,7 +86,7 @@ class Character(Base):
     def savePicture(self, path):
         """Saves the picture blob to disk."""
 
-        buf = cStringIO.StringIO(self.picture)
+        buf = StringIO(self.picture)
         with open(path, 'w') as fd:
             buf.seek(0)
             shutil.copyfileobj(buf, fd)
@@ -237,5 +242,24 @@ for ii, band in enumerate('FNurgiz'):
     propertyName = 'petroth50_el_{0}'.format(band)
     setattr(NSA, propertyName, HybridProperty('petroth50_el', ii))
     setattr(NSA, 'petroth50_el_colour', HybridColour('petroth50_el'))
+
+
+# Add stellar mass hybrid attributes to NSA catalog
+def logmass(parameter):
+
+    @hybrid_property
+    def mass(self):
+        par = getattr(self, parameter)
+        return math.log10(par)
+
+    @mass.expression
+    def mass(cls):
+        par = getattr(cls, parameter)
+        return func.log(par)
+
+    return mass
+
+setattr(NSA, 'petro_logmass_el', logmass('petro_mass_el'))
+setattr(NSA, 'sersic_logmass', logmass('sersic_mass'))
 
 configure_mappers()
