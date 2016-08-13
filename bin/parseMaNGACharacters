@@ -6,6 +6,10 @@ parseMaNGACharacters
 Created by José Sánchez-Gallego on 30 Apr 2015.
 Licensed under a 3-clause BSD license.
 
+This scripts grabs all the character names and pictures from the
+website http://www.anime-planet.com to build a DB of characters that can be
+assigned to MaNGA targets.
+
 Revision history:
     30 Apr 2015 J. Sánchez-Gallego
       Initial version
