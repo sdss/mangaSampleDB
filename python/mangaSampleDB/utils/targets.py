@@ -30,10 +30,13 @@ warnings.showwarning = _warning
 def loadMangaTargets(mangaTargetsExtFile):
     """Loads a list of manga targets to mangasampledb.manga_target.
 
-    Parameters
-    ----------
-    mangaTargetsExtFile : str
-        The path to the MaNGA_targets_extNSA catalogue to load.
+    Parameters:
+        mangaTargetsExtFile (str):
+            The path to the MaNGA_targets_extNSA catalogue to load.
+
+    Returns:
+        result (bool):
+            Returns True if at least one row was inserted, False otherwise.
 
     """
 
@@ -76,5 +79,7 @@ def loadMangaTargets(mangaTargetsExtFile):
             db.mangasampledb.MangaTarget.__table__.insert(
                 [{'mangaid': mangaid} for mangaid in mangaIDs_insert]))
         print('INFO: inserted {0} targets.'.format(len(mangaIDs_insert)))
+        return True
     else:
         print('INFO: not inserting any target.')
+        return False
