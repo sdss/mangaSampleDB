@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 
@@ -15,10 +15,14 @@ Revision history:
 
 from __future__ import division
 from __future__ import print_function
-from SDSSconnect import DatabaseConnection
-import warnings
-from astropy import table
+
 import os
+import warnings
+
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from astropy import table
 
 
 def _warning(message, category=UserWarning, filename='', lineno=-1):
@@ -26,26 +30,38 @@ def _warning(message, category=UserWarning, filename='', lineno=-1):
 
 warnings.showwarning = _warning
 
+__all__ = ('loadMangaTargets')
 
-def loadMangaTargets(mangaTargetsExtFile):
+
+def loadMangaTargets(mangaTargetsExtFile, engine):
     """Loads a list of manga targets to mangasampledb.manga_target.
 
     Parameters:
         mangaTargetsExtFile (str):
             The path to the MaNGA_targets_extNSA catalogue to load.
+        engine (SQLAlchemy |engine|):
+            The engine to use to connect to the DB.
 
     Returns:
         result (bool):
-            Returns True if at least one row was inserted, False otherwise.
+            Returns ``True`` if at least one row was inserted, False otherwise.
+
+    .. |engine| replace:: Engine `<http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Engine>`_
 
     """
 
     assert os.path.exists(mangaTargetsExtFile), 'file does not exit.'
 
-    # Creates DB connection
+    # Creates DB session
 
-    db = DatabaseConnection('mangadb_local', models=['mangasampledb'])
-    session = db.Session()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    Base = declarative_base(bind=engine)
+
+    class MangaTarget(Base):
+        __tablename__ = 'manga_target'
+        __table_args__ = {'autoload': True, 'schema': 'mangasampledb'}
 
     targets = table.Table.read(mangaTargetsExtFile)
     mangaIDs = [target.strip() for target in targets['MANGAID']]
@@ -56,9 +72,10 @@ def loadMangaTargets(mangaTargetsExtFile):
                       'Duplicates will be removed.'
                       .format(len(mangaIDs) - len(setMangaIDs)))
 
-    dbMangaIDs = session.query(db.mangasampledb.MangaTarget.mangaid).all()
+    dbMangaIDs = session.query(MangaTarget.mangaid).all()
+
     if len(dbMangaIDs) > 0:
-        dbMangaIDs = zip(*dbMangaIDs)[0]
+        dbMangaIDs = list(zip(*dbMangaIDs))[0]
 
     setDbMangaIDs = set(dbMangaIDs)
 
@@ -75,8 +92,8 @@ def loadMangaTargets(mangaTargetsExtFile):
                       .format(len(mangaIDs) - len(mangaIDs_insert)))
 
     if len(mangaIDs_insert) > 0:
-        db.engine.execute(
-            db.mangasampledb.MangaTarget.__table__.insert(
+        engine.execute(
+            MangaTarget.__table__.insert(
                 [{'mangaid': mangaid} for mangaid in mangaIDs_insert]))
         print('INFO: inserted {0} targets.'.format(len(mangaIDs_insert)))
         return True
