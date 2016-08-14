@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 loadCatalogueToSampleDB
@@ -17,64 +17,83 @@ Revision history:
 
 from __future__ import division
 from __future__ import print_function
-from mangaSampleDB.utils.catalogue import ingestCatalogue
+
 import argparse
-import sys
 import os
+import sys
+
+from mangaSampleDB.utils.catalogue import ingestCatalogue
+from mangaSampleDB.utils import create_connection
 
 
-def main(argv=None):
+def main():
 
-    parser = argparse.ArgumentParser(prog=os.path.basename(sys.argv[0]))
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Loads a catalogue and creates the relational table '
+                    'linking it to mangasampledb.targets.')
 
-    parser.add_argument('--connection-string', type=str, dest='connString',
-                        help='The connection string to be used when calling '
-                             'DatabaseConnection. If not defined, the default '
-                             'connection was not used.')
+    parser.add_argument('CATFILE', metavar='CATFILE', type=str,
+                        help='The file with the catalogue to load')
+    parser.add_argument('CATNAME', metavar='CATNAME', type=str,
+                        help='The name for this catalogue')
+    parser.add_argument('VERSION', metavar='VERSION', type=str,
+                        help='The version of the catalogue being loaded')
 
-    subparsers = parser.add_subparsers(title='actions')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
+                        default=False, help='Sets the verbose mode.')
 
-    # parserTest = subparsers.add_parser(
-    #     'test', help='runs the test suite', description='Runs the test suite.')
-    # parserTest.set_defaults(func=runTests)
+    parser.add_argument('-c', '--current', dest='current', default=True,
+                        action='store_true',
+                        help='Makes the catalogue being loaded the '
+                             'current version.')
+    parser.add_argument('-o', '--overwrite', dest='overwrite',
+                        action='store_true', default=False,
+                        help='Removes the current version of the DB '
+                             'table if it exists.')
+    parser.add_argument('-s', '--step', dest='step',
+                        action='store', type=int, default=5000,
+                        help='Number of rows to be inserted at a time.')
+    parser.add_argument('-l', '--limit', dest='limit',
+                        action='store_true', default=False,
+                        help='if set, only catalogue targets that '
+                             'match the MaNGA sample will be added. Requires '
+                             '--match to be set.')
+    parser.add_argument('-m', '--match', dest='match', type=str,
+                        action='store', nargs=2,
+                        metavar=('MATCH_FILE', 'MATCH_DESCRIPTION'),
+                        help='The file containing the matching between '
+                             'mangaids and the catalogue being loaded '
+                             'and the file with the description on how '
+                             'the matching was performed.')
 
-    parserIngest = subparsers.add_parser(
-        'ingest', help='loads a catalogue in mangaSampleDB',
-        description='Loads a catalogue in mangaSampleDB.')
-    parserIngest.add_argument('CATFILE', metavar='CATFILE', type=str,
-                              help='The file with the catalogue to load')
-    parserIngest.add_argument('CATNAME', metavar='CATNAME', type=str,
-                              help='The name for this catalogue')
-    parserIngest.add_argument('VERSION', metavar='VERSION', type=str,
-                              help='The version of the catalogue being loaded')
-    parserIngest.add_argument('-c', '--current', dest='current',
-                              action='store_false',
-                              help='Makes the catalogue being loaded the '
-                                   'current version.')
-    parserIngest.add_argument('-s', '--step', dest='step',
-                              action='store', type=int, default=500,
-                              help='Number of rows to be inserted at a time.')
-    parserIngest.add_argument('-l', '--limit', dest='limit',
-                              action='store_true',
-                              help='if set, only catalogue targets that '
-                              'match the MaNGA sample will be added. Requires '
-                              '--match to be set.')
-    parserIngest.add_argument('-m', '--match', dest='match', type=str,
-                              action='store', nargs=2,
-                              metavar=('MATCH_FILE', 'MATCH_DESCRIPTION'),
-                              help='The file containing the matching between '
-                                   'mangaids and the catalogue being loaded '
-                                   'and the file with the description on how '
-                                   'the matching was performed.')
-    parserIngest.set_defaults(func=ingestCatalogue)
+    parser_db = parser.add_argument_group(title='Database connect arguments')
+    parser_db.add_argument('-d', '--database', dest='database', type=str,
+                           default='manga', help='The database name.')
+    parser_db.add_argument('-u', '--user', dest='user', type=str,
+                           default='manga', help='The database username.')
+    parser_db.add_argument('-w', '--password', dest='password', type=str,
+                           default='', help='The database password.')
+    parser_db.add_argument('-H', '--host', dest='host', type=str,
+                           default='localhost', help='The database host.')
+    parser_db.add_argument('-p', '--port', dest='port', type=int, default=5432,
+                           help='The database port.')
 
     args = parser.parse_args()
+
+    engine = create_connection(db_name=args.database,
+                               username=args.user,
+                               password=args.password,
+                               host=args.host,
+                               port=args.port)
 
     funcKwargs = {}
     for key in vars(args).keys():
         funcKwargs[key.lower()] = getattr(args, key)
 
-    args.func(**funcKwargs)
+    funcKwargs['engine'] = engine
+
+    ingestCatalogue(**funcKwargs)
 
 
 if __name__ == '__main__':

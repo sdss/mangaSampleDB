@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 
@@ -15,17 +15,20 @@ Revision history:
 
 from __future__ import division
 from __future__ import print_function
-import sqlalchemy as sql
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import mapper, configure_mappers
-from sqlalchemy.ext.declarative import declarative_base
-from SDSSconnect import DatabaseConnection
-from sqlalchemy.engine.reflection import Inspector
-from astropy import table
-import warnings
-import numpy as np
+
 import os
-import sys
+import warnings
+
+import sqlalchemy as sql
+from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import mapper, configure_mappers
+
+from astropy import table
+import numpy as np
+
+from mangaSampleDB.utils.table_to_db import table_to_db
 
 
 def _warning(message, category=UserWarning, filename='', lineno=-1):
@@ -33,68 +36,18 @@ def _warning(message, category=UserWarning, filename='', lineno=-1):
 
 warnings.showwarning = _warning
 
-
-def getPSQLtype(numpyType, colShape):
-    """Returns the Postgresql type for a Numpy data type."""
-
-    if numpyType == np.uint8:
-        sqlType = sql.SmallInteger
-    elif numpyType in [np.int16, np.int32, np.int64]:
-        sqlType = sql.Integer
-    elif numpyType in [np.float32, np.float64]:
-        sqlType = sql.Float
-    elif numpyType == np.string_:
-        sqlType = sql.String
-    else:
-        raise RuntimeError('the data type {0} cannot be converted to '
-                           'PosgreSQL.'.format(numpyType))
-
-    if len(colShape) == 1:
-        return sqlType
-    elif len(colShape) == 2:
-        return postgresql.ARRAY(sqlType, dimensions=1)
-    elif len(colShape) == 3:
-        return postgresql.ARRAY(sqlType, dimensions=2)
-    else:
-
-        raise RuntimeError('arrays with dimensionality larger than 2 are not '
-                           'currently supported.')
+__all__ = ('ingestCatalogue')
 
 
-def _createNewTable(catName, catData, engine):
-    """Creates a new empty table in mangaSampleDB."""
-
-    columns = [sql.Column('pk', sql.Integer, primary_key=True,
-                          autoincrement=True)]
-
-    for nn, colName in enumerate(catData.colnames):
-        dtype = catData.columns[nn].dtype.type
-        shape = catData.columns[nn].shape
-        sqlType = getPSQLtype(dtype, shape)
-        columns.append(sql.Column(colName.lower(), sqlType))
-
-    columns += [sql.Column('catalogue_pk', sql.SmallInteger, )]
-
-    meta = sql.MetaData(schema='mangasampledb')
-    newTable = sql.Table(catName, meta, *columns)
-    meta.create_all(engine)
-
-    class NewCatTable(object):
-        __table__ = newTable
-        pass
-
-    mapper(NewCatTable, newTable)
-    configure_mappers()
-
-    return NewCatTable
-
-
-def _createCatalogueRecord(db, session, catname, version,
+def _createCatalogueRecord(Base, session, catname, version,
                            match=None, current=True):
     """Adds a new row to the mangasampledb.catalogue table."""
 
+    Catalogue = Base.classes.catalogue
+    CurrentCatalogue = Base.classes.current_catalogue
+
     with session.begin():
-        newCatalogue = db.mangasampledb.Catalogue()
+        newCatalogue = Catalogue()
         newCatalogue.catalogue_name = catname
         newCatalogue.version = version
         if match:
@@ -109,16 +62,13 @@ def _createCatalogueRecord(db, session, catname, version,
     # already current. If so, removes it an makes the new one current.
     if current:
 
-        currentCheck = session.query(
-            db.mangasampledb.CurrentCatalogue.pk).join(
-                db.mangasampledb.Catalogue).filter(
-                    db.mangasampledb.Catalogue.catalogue_name == catname
-        ).scalar()
+        currentCheck = session.query(CurrentCatalogue.pk).join(
+            Catalogue).filter(Catalogue.catalogue_name == catname).scalar()
 
         with session.begin():
             if currentCheck:
-                currentToRemove = session.query(
-                    db.mangasampledb.CurrentCatalogue).get(currentCheck)
+                currentToRemove = session.query(CurrentCatalogue).get(
+                    currentCheck)
                 warnings.warn(
                     'removing {0} {1} as current catalogue'
                     .format(
@@ -127,7 +77,7 @@ def _createCatalogueRecord(db, session, catname, version,
                     UserWarning)
                 session.delete(currentToRemove)
 
-            newCurrentCatalogue = db.mangasampledb.CurrentCatalogue(
+            newCurrentCatalogue = CurrentCatalogue(
                 catalogue_pk=newCatalogue.pk)
             session.add(newCurrentCatalogue)
             print('INFO: added {0} {1} as current catalogue'
@@ -136,13 +86,16 @@ def _createCatalogueRecord(db, session, catname, version,
     return newCatalogue.pk
 
 
-def _createRelationalTable(db, session, matchCat, NewCatTable):
+def _createRelationalTable(Base, engine, session, metadata,
+                           matchCat, NewCatTable):
     """Created a relation table between `NewTable` and manga_target."""
+
+    MangaTarget = Base.classes.manga_target
 
     newCatTableName = NewCatTable.__table__.name.lower()
 
     # Checks if table exists
-    inspector = Inspector.from_engine(db.engine)
+    inspector = Inspector.from_engine(engine)
     tables = inspector.get_table_names(schema='mangasampledb')
 
     matchCol = [col.lower() for col in matchCat.colnames
@@ -152,19 +105,17 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
 
     if relationalTableName not in tables:
 
-        metadata = sql.MetaData(schema='mangasampledb')
-
         relationalTable = sql.Table(
             relationalTableName, metadata,
             sql.Column('pk', sql.Integer, primary_key=True),
             sql.Column('manga_target_pk', sql.Integer,
-                       sql.ForeignKey(db.mangasampledb.MangaTarget.pk)),
+                       sql.ForeignKey(MangaTarget.pk)),
             sql.Column('{0}_pk'.format(newCatTableName), sql.Integer,
                        sql.ForeignKey(NewCatTable.pk)))
 
-        metadata.create_all(db.engine)
+        metadata.create_all(engine)
 
-        class RelationalTable(object):
+        class RelationalTable(Base):
             __table__ = relationalTable
 
         mapper(RelationalTable, relationalTable)
@@ -173,33 +124,23 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
     else:
         warnings.warn('table {0} already exists'.format(relationalTableName),
                       UserWarning)
-
-        decBase = declarative_base(bind=db.engine)
-
-        class RelationalTable(decBase):
-            __tablename__ = relationalTableName
-            __table_args__ = (
-                sql.UniqueConstraint(
-                    'manga_target_pk', '{0}_pk'.format(newCatTableName),
-                    name='manga_target_{0}_ff'.format(newCatTableName)),
-                {'autoload': True, 'schema': 'mangasampledb'})
+        RelationalTable = Base.classes[relationalTableName]
 
     configure_mappers()
 
     print('INFO: loading data into {0} ...'.format(relationalTableName))
 
     # Gets information for pks and mangaids from MangaTarget
-    mangaTargetData = session.query(db.mangasampledb.MangaTarget.pk,
-                                    db.mangasampledb.MangaTarget.mangaid).all()
-    mangaIds = np.array(zip(*mangaTargetData)[1])
-    mangaTargetPks = np.array(zip(*mangaTargetData)[0])
+    mangaTargetData = session.query(MangaTarget.pk, MangaTarget.mangaid).all()
+    mangaIds = np.array(list(zip(*mangaTargetData))[1])
+    mangaTargetPks = np.array(list(zip(*mangaTargetData))[0])
 
     # Does the same with the new catalogue table, using the match column
     matchColData = session.query(
         NewCatTable.pk, getattr(NewCatTable, matchCol)).all()
 
-    newTableMatchValues = np.array(zip(*matchColData)[1])
-    newTableMatchPks = np.array(zip(*matchColData)[0])
+    newTableMatchValues = np.array(list(zip(*matchColData))[1])
+    newTableMatchPks = np.array(list(zip(*matchColData))[0])
 
     # Builds the insert dictionary making sure we get information about both
     # mangaid and new catalogue match column.
@@ -210,77 +151,64 @@ def _createRelationalTable(db, session, matchCat, NewCatTable):
         mangaTargetPk = mangaTargetPks[np.where(mangaIds == mangaid)][0]
         newTableMatchPk = newTableMatchPks[
             np.where(newTableMatchValues == matchVal)][0]
-        insertData.append({'manga_target_pk': mangaTargetPk,
-                           '{0}_pk'.format(newCatTableName): newTableMatchPk})
+        insertData.append(
+            {'manga_target_pk': int(mangaTargetPk),
+             '{0}_pk'.format(newCatTableName): int(newTableMatchPk)})
 
     # Inserts the data
-    db.engine.execute(RelationalTable.__table__.insert(insertData))
+    engine.execute(RelationalTable.__table__.insert(insertData))
 
-# def _updateColumns(catname, catData):
-#     """Checks if new columns need to be added to an existing table."""
-#
-#     try:
-#         from migrate import changeset
-#     except:
-#         raise RuntimeError('sqlalchemy-migrate is not installed. It is '
-#                            'necessary to uptade table columns.')
-#
-#     from sdss.internal.database.utah.mangadb import SampleModelClasses
-#
-#     allTables = SampleModelClasses.Base.metadata.tables.keys()
-#
-#     if 'mangasampledb.' + catname not in allTables:
-#         raise RuntimeError('error while trying to update table {0}. The '
-#                            'table does not exist.'.format(catname))
-#
-#     camelTable = SampleModelClasses.camelizeClassName(
-#         None, catname, None)
-#
-#     sqlTable = SampleModelClasses.Base.classes[camelTable].__table__
-#     allColumns = (sqlTable.columns.keys())
-#
-#     newCols = []
-#     for col in catData.colnames:
-#         if col.lower() not in allColumns:
-#             newCols.append(col)
-#
-#     try:
-#         for colName in newCols:
-#             dtype = catData.columns[colName].dtype.type
-#             shape = catData.columns[colName].shape
-#             sqlType = getPSQLtype(dtype, shape)
-#             sqlColumn = sql.Column(colName.lower(), sqlType)
-#             sqlColumn.create(sqlTable)
-#     except Exception as ee:
-#         raise RuntimeError('error found while trying to append column '
-#                            '{0}: {1}'.format(colName, ee))
+    return RelationalTable
 
 
-def runTests(args):
-    """Runs tests for mangaSampleDB ingestion."""
+def ingestCatalogue(catfile, catname, version, engine, current=True,
+                    match=None, step=500, limit=False, overwrite=False,
+                    verbose=False, **kwargs):
+    """Runs the catalogue ingestion.
 
-    pass
+    Parameters:
+        catfile (str):
+            The FITS file containing the catalogue.
+        catname (str):
+            The name of the catalogue. The table created under mangasampledb
+            will have that name.
+        version (str):
+            The version of the catalogue being ingested.
+        engine (SQLAlchemy |engine|):
+            The engine to use to connect to the DB.
+        current (bool):
+            ``True`` if the ingested version of the catalogue must be made
+            current.
+        match (None or tuple):
+            If ``None``, not relational database will be created joining the
+            ingested catalogue to mangasampledb.manga_target. Otherwise, a
+            tuple of two elements, the first being the matching catalogue and
+            the second the text file containing the description of how the
+            matching was done. The matching catalogue must contain only two
+            columns, ``mangaid`` and a column present in ``catfile`` that is
+            a unique identifier of the targets in the ingested catalogue.
+        step (int):
+            The number of catalogue elements that must be inserted at a time.
+        limit (bool):
+            If ``True``, only the targets in ``catfile`` that are matched to
+            MaNGA targets will be ingested. Requires ``match`` to be set.
+        overwrite (bool):
+            If ``True``, removes any table that already exists before recreting
+            it.
+        verbose (bool):
+            Sets the verbosity mode.
 
+    Returns:
+        result (tuple):
+            If ``match=None``, returns the model class for the new catalogue
+            table. Otherwise, returs a tuple in which the first element is the
+            model of the new catalogue table and the second is the model of
+            the relational, many-to-many table joining it to
+            mangasampledb.manga_target.
 
-def _checkValue(value):
-    """Converts NaNs to None."""
+    .. |engine| replace:: Engine `<http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Engine>`_
 
-    if np.isscalar(value):
-        try:
-            if np.isnan(value):
-                return None
-            else:
-                return value
-        except:
-            return value
-    else:
-        return np.where(np.isnan(value), None, value)
-
-
-def ingestCatalogue(catfile, catname, version, current=True,
-                    match=None, connstring=None, step=500,
-                    limit=False, **kwargs):
-    """Runs the catalogue ingestion."""
+    """
 
     # Runs some sanity checks
     if match is not None:
@@ -296,29 +224,31 @@ def ingestCatalogue(catfile, catname, version, current=True,
     if limit and not match:
         raise ValueError('limit=True but match not set.')
 
-    # Creates the appropriate connection to the DB.
-    if connstring is None:
-        db = DatabaseConnection('mangadb_local', models=['mangasampledb'])
-    else:
-        db = DatabaseConnection(databaseConnectionString=connstring,
-                                models=['mangasampledb'])
+    # Bind the base to the current engine
+    metadata = sql.MetaData(schema='mangasampledb')
+    metadata.reflect(engine)
+    Base = automap_base(metadata=metadata)
+    Base.prepare()
 
-    session = db.Session()
-    sampleDB = db.mangasampledb
+    Catalogue = Base.classes.catalogue
+
+    # Creates a session
+    Session = sessionmaker(engine, autocommit=True)
+    session = Session()
 
     # Checks if table already exists.
-    inspector = Inspector.from_engine(db.engine)
+    inspector = Inspector.from_engine(engine)
     tables = inspector.get_table_names(schema='mangasampledb')
 
     if catname in tables:
         raise ValueError('table {0} already exists in mangasampledb. '
                          'Drop it before continuing.'.format(catname))
 
-    # Checks if the catalogue name and version already exists. If not, adds
+    # Checks if the catalogue name and version already exists. If not, adds it.
     with session.begin(subtransactions=True):
-        catalogue = session.query(sampleDB.Catalogue.pk).filter(
-            sampleDB.Catalogue.catalogue_name == catname,
-            sampleDB.Catalogue.version == version).scalar()
+        catalogue = session.query(Catalogue.pk).filter(
+            Catalogue.catalogue_name == catname,
+            Catalogue.version == version).scalar()
 
     if catalogue is not None:
         catPK = catalogue
@@ -329,11 +259,13 @@ def ingestCatalogue(catfile, catname, version, current=True,
     else:
         print('INFO: creating record in mangasampledb.catalogue for '
               'CATNAME={0}, VERSION={1}.'.format(catname, version))
-        catPK = _createCatalogueRecord(db, session, catname, version,
+        catPK = _createCatalogueRecord(Base, session, catname, version,
                                        match=match, current=current)
 
     # Reads the catalogue file
     catData = table.Table.read(catfile, format='fits')
+    catData.add_column(table.Column(data=[catPK] * len(catData),
+                                    name='catalogue_pk', dtype=int))
 
     # Reads matching file, if any
     if match:
@@ -348,66 +280,16 @@ def ingestCatalogue(catfile, catname, version, current=True,
                                      matchCat[matchCol.lower()]))[0]
         catData = catData[validIndx]
 
-    # Creates the new table.
-    NewCatTable = _createNewTable(catname, catData, db.engine)
-
-    colnames = catData.colnames
-    nRows = len(catData)
-
-    print('INFO: now inserting ...')
-    print('INFO: inserting {0} rows at a time.'.format(step))
-    sys.stdout.write('INFO: inserted 0 rows out of {0}.\r'.format(nRows))
-    sys.stdout.flush()
-
-    nn = 0
-    while nn < nRows:
-
-        mm = nn + step
-
-        if mm >= nRows:
-            mm = nRows
-
-        # Replaces NaN in arrays with None.
-        dataDict = {}
-        for ii, colname in enumerate(colnames):
-            try:
-                dataDict[colname] = np.where(np.isnan(catData[colname][nn:mm]),
-                                             None,
-                                             catData[colname][nn:mm])
-            except:
-                dataDict[colname] = catData[colname][nn:mm]
-
-        dataLength = len(dataDict[colnames[0]])
-
-        # Some older versions of PosgreSQL seem to have problem when inserting
-        # an array of all NULLs. This ugly loop looks for those cases and
-        # replaces the array with a simple NULL.
-        data = []
-        for ii in range(dataLength):
-            dd = {}
-            for col in colnames:
-                value = dataDict[col][ii]
-                if not np.isscalar(value) and not np.any(value):
-                    value = None
-                dd[col.lower()] = value
-            dd['catalogue_pk'] = catPK
-            data.append(dd)
-
-        if len(data) > 0:
-            db.engine.execute(NewCatTable.__table__.insert(data))
-
-        if mm % step == 0:
-            sys.stdout.write(
-                '\x1b[2KINFO: inserted {0} rows out of {1}.\r'
-                .format(mm, nRows))
-            sys.stdout.flush()
-
-        nn = mm
-
-    sys.stdout.write('INFO: inserted {0} rows.\n'.format(nRows))
-    sys.stdout.flush()
+    NewCatTable = table_to_db(catData, 'manga', 'mangasampledb', 'nsa',
+                              engine=engine, overwrite=overwrite,
+                              chunk_size=step, verbose=verbose)
 
     # If there is a matching catalogue, we create the table relating
     # the new catalogue with mangasampledb.manga_target.
     if matchCat:
-        _createRelationalTable(db, session, matchCat, NewCatTable)
+        RelationalTable = _createRelationalTable(Base, engine, session,
+                                                 metadata, matchCat,
+                                                 NewCatTable)
+        return (NewCatTable, RelationalTable)
+
+    return RelationalTable
