@@ -93,9 +93,22 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
         unit.write('\n\n')
 
 
+def main():
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description=('Creates match files for NSA v1_0_1 that can then be '
+                     'loaded to mangaSampleDB.'))
+
+    parser.add_argument('nsaCat', metavar='nsaCat', type=str,
+                        help='The NSA v1_0_1 catalogue file.')
+    parser.add_argument('mangaTargetsExt', metavar='mangaTargetsExt', type=str,
+                        help='The MaNGA_targets_extNSA file.')
+
+    args = parser.parse_args()
+
+    createMatchFile_NSA_v1_0_1(args.nsaCat, args.mangaTargetsExt)
+
+
 if __name__ == '__main__':
-
-    nsaCat = sys.argv[1]
-    mangaTargetsExt = sys.argv[2]
-
-    createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt)
+    main()
