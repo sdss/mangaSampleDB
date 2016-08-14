@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 
@@ -15,11 +15,23 @@ Revision history:
 
 from __future__ import division
 from __future__ import print_function
-from SDSSconnect import DatabaseConnection
-import warnings
-from astropy import table
+
 import os
 import sys
+import warnings
+
+try:
+    import progressbar
+except ImportError:
+    progressbar = False
+
+import sqlalchemy as sql
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.automap import automap_base
+
+from astropy import table
+
+__all__ = ('loadMangaCharacters')
 
 
 def _warning(message, category=UserWarning, filename='', lineno=-1):
@@ -28,41 +40,57 @@ def _warning(message, category=UserWarning, filename='', lineno=-1):
 warnings.showwarning = _warning
 
 
-def loadMangaCharacters(characterList, imageDir):
+def loadMangaCharacters(characterList, imageDir, engine):
     """Loads a list of manga characters to mangasampledb.character.
 
-    Parameters
-    ----------
-    characterList : str
-        The file containing the list of characters. Must have been generated
-        using `parseMaNGACharacters.py`.
-    imageDir : str
-        The path where the downloaded images can be found.
+    Parameters:
+        characterList (str):
+            The file containing the list of characters. Must have been
+            generated using `parseMaNGACharacters.py`.
+        imageDir (str):
+            The path where the downloaded images can be found.
+        engine (SQLAlchemy |engine|):
+            The engine to use to connect to the DB.
+
+    Return:
+        result (bool):
+            Return ``True`` if all the rows have been successfully inserted.
+
+    .. |engine| replace:: Engine `<http://docs.sqlalchemy.org/en/latest/core/connections.html#sqlalchemy.engine.Engine>`_
 
     """
 
     assert os.path.exists(characterList), 'file does not exit.'
     assert os.path.exists(imageDir), 'image dir does not exit.'
 
-    # Creates DB connection
+    # Bind the base to the current engine
+    metadata = sql.MetaData()
+    metadata.reflect(engine, schema='mangasampledb')
+    Base = automap_base(metadata=metadata)
+    Base.prepare()
 
-    db = DatabaseConnection('mangadb_local', models=['mangasampledb'])
-    session = db.Session()
+    Character = Base.classes.character
+    Anime = Base.classes.anime
+
+    # Creates a session
+    Session = sessionmaker(engine, autocommit=True)
+    session = Session()
 
     characters = table.Table.read(characterList, format='ascii.fixed_width')
     nCharacter = len(characters)
 
-    sys.stdout.write('INFO: inserting character 0 ut of {0}.\r'
-                     .format(nCharacter))
-    sys.stdout.flush()
+    # If the progressbar package is installed, uses it to create a progress bar
+    if progressbar:
+        bar = progressbar.ProgressBar()
+        iterable = bar(range(nCharacter))
+    else:
+        iterable = range(nCharacter)
 
     with session.begin():
 
-        for ii, character in enumerate(characters):
+        for ii in iterable:
 
-            sys.stdout.write('INFO: inserting character {0} ut of {1}.\r'
-                             .format(ii + 1, nCharacter))
-            sys.stdout.flush()
+            character = characters[ii]
 
             name = character['name'].strip()
             imagePath = os.path.join(imageDir, character['imageName'])
@@ -74,24 +102,24 @@ def loadMangaCharacters(characterList, imageDir):
 
             image = open(imagePath, 'rb').read()
 
-            nameQuery = session.query(db.mangasampledb.Character).filter(
-                db.mangasampledb.Character.name == name).all()
+            nameQuery = session.query(Character).filter(
+                Character.name == name).all()
 
             if len(nameQuery) > 0:
                 continue
 
-            animeQuery = session.query(db.mangasampledb.Anime).filter(
-                db.mangasampledb.Anime.anime == animeName).all()
+            animeQuery = session.query(Anime).filter(
+                Anime.anime == animeName).all()
 
             if len(animeQuery) == 0:
-                anime = db.mangasampledb.Anime()
+                anime = Anime()
                 anime.anime = animeName
                 session.add(anime)
                 session.flush()
             else:
                 anime = animeQuery[0]
 
-            newChar = db.mangasampledb.Character()
+            newChar = Character()
             newChar.name = name
             newChar.picture = image
             newChar.manga_target_pk = None
@@ -99,4 +127,4 @@ def loadMangaCharacters(characterList, imageDir):
 
             session.add(newChar)
 
-    print()
+    return True

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 
@@ -15,8 +15,47 @@ Revision history:
 
 from __future__ import division
 from __future__ import print_function
+
+import argparse
+import os
 import sys
+
 from mangaSampleDB.utils.characters import loadMangaCharacters
+from mangaSampleDB.utils.connection import create_connection
+
+
+def main():
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description=('Loads the database of anime characters.'))
+
+    parser.add_argument('characterList', metavar='characterList', type=str,
+                        help='The file containing the list of characters.')
+    parser.add_argument('imageDir', metavar='imageDir', type=str,
+                        help='The path of the downloaded images.')
+
+    parser_db = parser.add_argument_group(title='Database connect arguments')
+    parser_db.add_argument('-d', '--database', dest='database', type=str,
+                           default='manga', help='The database name.')
+    parser_db.add_argument('-u', '--user', dest='user', type=str,
+                           default='manga', help='The database username.')
+    parser_db.add_argument('-w', '--password', dest='password', type=str,
+                           default='', help='The database password.')
+    parser_db.add_argument('-H', '--host', dest='host', type=str,
+                           default='localhost', help='The database host.')
+    parser_db.add_argument('-p', '--port', dest='port', type=int, default=5432,
+                           help='The database port.')
+
+    args = parser.parse_args()
+
+    engine = create_connection(db_name=args.database,
+                               username=args.user,
+                               password=args.password,
+                               host=args.host,
+                               port=args.port)
+
+    loadMangaCharacters(args.characterList, args.imageDir, engine)
 
 
 if __name__ == '__main__':
@@ -27,6 +66,4 @@ if __name__ == '__main__':
 
     """
 
-    mangaCharacterList = sys.argv[1]
-    imageDir = sys.argv[2]
-    loadMangaCharacters(mangaCharacterList, imageDir)
+    main()
