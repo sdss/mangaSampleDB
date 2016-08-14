@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 
@@ -15,9 +15,13 @@ Revision history:
 
 from __future__ import division
 from __future__ import print_function
-from astropy import table
-import sys
+
+import argparse
 import os
+import sys
+from pathlib import Path
+
+from astropy import table
 
 
 match_description = """
@@ -41,15 +45,13 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
     versions of the NSA catalogue will requiere matching with v1_0_1 before
     matching with mangaids.
 
-    Parameters
-    ----------
-    nsaCat : str
-        The path to the NSA v1_0_1 catalogue.
-    mangaTargetsExt : str
-        The path to the MaNGA_targets_extNSA catalogue.
+    Parameters:
+        nsaCat (str)
+            The path to the NSA v1_0_1 catalogue.
+        mangaTargetsExt (str)
+            The path to the MaNGA_targets_extNSA catalogue.
 
-    Returns
-    -------
+    Returns:
         Produces two files. The first one, `nsa_v1_0_1_matched.fits`, contains
         two columns, the first being `mangaid` and the second the matching
         `nsaid`. The second file, `nsa_v1_0_1_matched.txt`, is a plain text
@@ -58,9 +60,11 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
 
     """
 
-    assert os.path.exists(nsaCat), 'NSA catalogue cannot be found'
-    assert os.path.exists(mangaTargetsExt), \
-        'MaNGA_targets_extNSA file cannot be found'
+    nsaCat = Path(nsaCat)
+    mangaTargetsExt = Path(mangaTargetsExt)
+
+    assert nsaCat.exists(), 'NSA catalogue cannot be found'
+    assert mangaTargetsExt.exists(), 'MaNGA_targets_extNSA cannot be found'
 
     nsa = table.Table.read(nsaCat)
     manga = table.Table.read(mangaTargetsExt)
@@ -73,7 +77,8 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
     nsaTargets = nsa[indices]
     nsaIDs = nsaTargets['NSAID']
 
-    matchTable = table.Table([mangaids_cat1, nsaIDs], names=['mangaid', 'nsaid'],
+    matchTable = table.Table([mangaids_cat1, nsaIDs],
+                             names=['mangaid', 'nsaid'],
                              dtype=['S50', int])
 
     if os.path.exists('nsa_v1_0_1_matched.fits'):
@@ -85,8 +90,7 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
         unit.write('-----------------------------------\n\n')
         unit.write('Input catalogues\n')
         unit.write('----------------\n')
-        unit.write('{0}\n{1}\n\n\n'.format(os.path.basename(nsaCat),
-                                           os.path.basename(mangaTargetsExt)))
+        unit.write('{0}\n{1}\n\n\n'.format(nsaCat.name, mangaTargetsExt.name))
         unit.write('Description\n')
         unit.write('------------')
         unit.write(match_description)
