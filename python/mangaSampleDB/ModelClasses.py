@@ -19,6 +19,7 @@ from __future__ import print_function
 from sdss.internal.database.DatabaseConnection import DatabaseConnection
 from sqlalchemy.orm import relationship, configure_mappers, backref
 from sqlalchemy.inspection import inspect
+from sqlalchemy import case
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy import ForeignKeyConstraint, func
 import shutil
@@ -250,12 +251,17 @@ def logmass(parameter):
     @hybrid_property
     def mass(self):
         par = getattr(self, parameter)
-        return math.log10(par)
+        return math.log10(par) if par > 0 else 0
 
     @mass.expression
     def mass(cls):
         par = getattr(cls, parameter)
-        return func.log(par)
+        return case(
+                    [
+                        (par > 0, func.log(par)),
+                        (par == 0, 0)
+                    ]
+                )
 
     return mass
 
