@@ -256,7 +256,7 @@ for ii, band in enumerate('FNurgiz'):
     setattr(NSA, propertyName, HybridProperty('petroth50_el', ii))
 
 # Creates an attribute for each colour.
-for colour_a, colour_b in itertools.combinations('FNurgiz', 2):
+for colour_a, colour_b in itertools.combinations('FNugriz', 2):
     setattr(NSA, 'petroth50_el_{0}_{1}'.format(colour_a, colour_b),
             HybridMethodToProperty('petroth50_el_colour', colour_a, colour_b))
 
