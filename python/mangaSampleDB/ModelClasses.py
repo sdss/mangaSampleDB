@@ -25,6 +25,7 @@ from sqlalchemy import ForeignKeyConstraint, func
 import shutil
 import re
 import math
+import itertools
 
 try:
     import cStringIO as StringIO
@@ -238,11 +239,26 @@ def HybridColour(parameter):
 
     return colour
 
+
+def HybridMethodToProperty(method, bandA, bandB):
+
+    @hybrid_property
+    def colour_property(self):
+        return getattr(self, method)(bandA, bandB)
+
+    return colour_property
+
+
 # Adds hybrid properties defining colours for petroth50_el (for now).
+setattr(NSA, 'petroth50_el_colour', HybridColour('petroth50_el'))
 for ii, band in enumerate('FNurgiz'):
     propertyName = 'petroth50_el_{0}'.format(band)
     setattr(NSA, propertyName, HybridProperty('petroth50_el', ii))
-    setattr(NSA, 'petroth50_el_colour', HybridColour('petroth50_el'))
+
+# Creates an attribute for each colour.
+for colour_a, colour_b in itertools.combinations('FNurgiz', 2):
+    setattr(NSA, 'petroth50_el_{0}_{1}'.format(colour_a, colour_b),
+            HybridMethodToProperty('petroth50_el_colour', colour_a, colour_b))
 
 
 # Add stellar mass hybrid attributes to NSA catalog
