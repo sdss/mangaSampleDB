@@ -31,8 +31,9 @@ import numpy as np
 from mangaSampleDB.utils.table_to_db import table_to_db
 
 
-def _warning(message, category=UserWarning, filename='', lineno=-1):
+def _warning(message, category, *args, **kwargs):
     print('{0}: {1}'.format(category.__name__, message))
+
 
 warnings.showwarning = _warning
 
