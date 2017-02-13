@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import sys
 import warnings
 
 try:
@@ -34,8 +33,9 @@ from astropy import table
 __all__ = ('loadMangaCharacters')
 
 
-def _warning(message, category=UserWarning, filename='', lineno=-1):
+def _warning(message, category, *args, **kwargs):
     print('{0}: {1}'.format(category.__name__, message))
+
 
 warnings.showwarning = _warning
 
