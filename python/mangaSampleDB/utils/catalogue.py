@@ -88,7 +88,7 @@ def _createCatalogueRecord(Base, session, catname, version,
 
 
 def _createRelationalTable(Base, engine, session, metadata,
-                           matchCat, NewCatTable):
+                           matchCat, NewCatTable, overwrite=False):
     """Created a relation table between `NewTable` and manga_target."""
 
     MangaTarget = Base.classes.manga_target
@@ -104,28 +104,38 @@ def _createRelationalTable(Base, engine, session, metadata,
 
     relationalTableName = 'manga_target_to_{0}'.format(newCatTableName)
 
-    if relationalTableName not in tables:
+    if relationalTableName in tables:
 
-        relationalTable = sql.Table(
-            relationalTableName, metadata,
-            sql.Column('pk', sql.Integer, primary_key=True),
-            sql.Column('manga_target_pk', sql.Integer,
-                       sql.ForeignKey(MangaTarget.pk)),
-            sql.Column('{0}_pk'.format(newCatTableName), sql.Integer,
-                       sql.ForeignKey(NewCatTable.pk)))
+        if not overwrite:
+            raise AssertionError(
+                'relational table {0} exists. Use '
+                'overwrite=True to replace it.'.format(relationalTableName))
 
-        metadata.create_all(engine)
+        warnings.warn('table {0} already exists. Overwriting it.'.format(
+            relationalTableName), UserWarning)
 
-        class RelationalTable(Base):
-            __table__ = relationalTable
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        cursor.execute('DROP TABLE IF EXISTS mangasampledb.{0} CASCADE;'
+                       .format(relationalTableName))
+        connection.commit()
+        cursor.close()
 
-        mapper(RelationalTable, relationalTable)
-        print('INFO: created table {0}'.format(relationalTableName))
+    relationalTable = sql.Table(
+        relationalTableName, metadata,
+        sql.Column('pk', sql.Integer, primary_key=True),
+        sql.Column('manga_target_pk', sql.Integer,
+                   sql.ForeignKey(MangaTarget.pk)),
+        sql.Column('{0}_pk'.format(newCatTableName), sql.Integer,
+                   sql.ForeignKey(NewCatTable.pk)), extend_existing=True)
 
-    else:
-        warnings.warn('table {0} already exists'.format(relationalTableName),
-                      UserWarning)
-        RelationalTable = Base.classes[relationalTableName]
+    metadata.create_all(engine)
+
+    class RelationalTable(Base):
+        __table__ = relationalTable
+
+    mapper(RelationalTable, relationalTable)
+    print('INFO: created table {0}'.format(relationalTableName))
 
     configure_mappers()
 
@@ -290,7 +300,8 @@ def ingestCatalogue(catfile, catname, version, engine, current=True,
     if matchCat:
         RelationalTable = _createRelationalTable(Base, engine, session,
                                                  metadata, matchCat,
-                                                 NewCatTable)
+                                                 NewCatTable,
+                                                 overwrite=overwrite)
         return (NewCatTable, RelationalTable)
 
     return RelationalTable

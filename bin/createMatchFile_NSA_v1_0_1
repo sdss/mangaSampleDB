@@ -23,6 +23,8 @@ from pathlib import Path
 
 from astropy import table
 
+import numpy as np
+
 
 match_description = """
 By definition, mangaids with catalogid=1 are simply the index of the target
@@ -36,7 +38,7 @@ matching with mangaids.
 """
 
 
-def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
+def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt, drpall_file):
     """Creates the match and description files for NSA v1_0_1.
 
     By definition, mangaids with catalogid=1 are simply the index of the target
@@ -50,6 +52,11 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
             The path to the NSA v1_0_1 catalogue.
         mangaTargetsExt (str)
             The path to the MaNGA_targets_extNSA catalogue.
+        drpall_file (srt):
+            The path to the drpall file. This file is used to complement
+            ``mangaTargetsExtFile`` with targets that have been observed but
+            are not in the targetting catalogue (e.g., ancillaries or past
+            target selections).
 
     Returns:
         Produces two files. The first one, `nsa_v1_0_1_matched.fits`, contains
@@ -68,8 +75,10 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
 
     nsa = table.Table.read(nsaCat)
     manga = table.Table.read(mangaTargetsExt)
+    drpall = table.Table.read(drpall_file)
 
-    mangaids = [mm.strip() for mm in manga['MANGAID']]
+    mangaids = np.unique([mm.strip() for mm in manga['MANGAID']] +
+                         [dd.strip() for dd in drpall['mangaid']])
     mangaids_cat1 = [mangaid for mangaid in mangaids
                      if mangaid.split('-')[0] == '1']
     indices = [int(mm.split('-')[1]) for mm in mangaids_cat1]
@@ -80,6 +89,16 @@ def createMatchFile_NSA_v1_0_1(nsaCat, mangaTargetsExt):
     matchTable = table.Table([mangaids_cat1, nsaIDs],
                              names=['mangaid', 'nsaid'],
                              dtype=['S50', int])
+
+    # Now we take care of the particular case of 12- targets that were selected
+    # from NSA v1b but that can be matched to targets in NSA v1_0_1
+
+    mangaids_cat12 = [mangaid for mangaid in mangaids
+                      if mangaid.split('-')[0] == '12']
+    for mID in mangaids_cat12:
+        if mID in drpall['mangaid']:
+            matchTable.add_row((mID,
+                                drpall[drpall['mangaid'] == mID]['nsa_nsaid']))
 
     if os.path.exists('nsa_v1_0_1_matched.fits'):
         os.remove('nsa_v1_0_1_matched.fits')
@@ -108,10 +127,12 @@ def main():
                         help='The NSA v1_0_1 catalogue file.')
     parser.add_argument('mangaTargetsExt', metavar='mangaTargetsExt', type=str,
                         help='The MaNGA_targets_extNSA file.')
+    parser.add_argument('drpall', metavar='drpall', type=str,
+                        help='The drpall file.')
 
     args = parser.parse_args()
 
-    createMatchFile_NSA_v1_0_1(args.nsaCat, args.mangaTargetsExt)
+    createMatchFile_NSA_v1_0_1(args.nsaCat, args.mangaTargetsExt, args.drpall)
 
 
 if __name__ == '__main__':

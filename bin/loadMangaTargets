@@ -34,6 +34,8 @@ def main():
 
     parser.add_argument('mangaTargetsExt', metavar='mangaTargetsExt', type=str,
                         help='The MaNGA_targets_extNSA file.')
+    parser.add_argument('drpall', metavar='drpall', type=str,
+                        help='The drpall file.')
 
     parser_db = parser.add_argument_group(title='Database connect arguments')
     parser_db.add_argument('-d', '--database', dest='database', type=str,
@@ -55,7 +57,7 @@ def main():
                                host=args.host,
                                port=args.port)
 
-    loadMangaTargets(args.mangaTargetsExt, engine)
+    loadMangaTargets(args.mangaTargetsExt, args.drpall, engine)
 
 
 if __name__ == '__main__':

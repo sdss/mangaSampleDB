@@ -34,12 +34,17 @@ warnings.showwarning = _warning
 __all__ = ('loadMangaTargets')
 
 
-def loadMangaTargets(mangaTargetsExtFile, engine):
+def loadMangaTargets(mangaTargetsExtFile, drpall_file, engine):
     """Loads a list of manga targets to mangasampledb.manga_target.
 
     Parameters:
         mangaTargetsExtFile (str):
             The path to the MaNGA_targets_extNSA catalogue to load.
+        drpall_file (srt):
+            The path to the drpall file. This file is used to complement
+            ``mangaTargetsExtFile`` with targets that have been observed but
+            are not in the targetting catalogue (e.g., ancillaries or past
+            target selections).
         engine (SQLAlchemy |engine|):
             The engine to use to connect to the DB.
 
@@ -65,7 +70,9 @@ def loadMangaTargets(mangaTargetsExtFile, engine):
         __table_args__ = {'autoload': True, 'schema': 'mangasampledb'}
 
     targets = table.Table.read(mangaTargetsExtFile)
-    mangaIDs = [target.strip() for target in targets['MANGAID']]
+    drpall = table.Table.read(drpall_file)
+    mangaIDs = [target.strip()
+                for target in targets['MANGAID'].tolist() + drpall['mangaid'].tolist()]
     setMangaIDs = set(mangaIDs)
 
     if len(setMangaIDs) != len(mangaIDs):
